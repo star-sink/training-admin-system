@@ -1,50 +1,46 @@
 package com.trainingadmin.controller;
 
+import com.trainingadmin.exception.BusinessException;
 import com.trainingadmin.pojo.Result;
 import com.trainingadmin.utils.AliyunOSSOperator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
 
+/**
+ * 文件上传控制器
+ */
 @Slf4j
 @RestController
 public class UploadController {
 
-    /**
-     * 本地磁盘存储方案
-     */
-/*    @PostMapping("/upload")
-    public Result upload(String name,Integer age,MultipartFile file) throws IOException {
-     log.info("接受参数:{},{},{}",name,age,file);
-     //获取原始文件名
-     String originalFilename= file.getOriginalFilename();
+    private final AliyunOSSOperator aliyunOSSOperator;
 
-     //新的文件名
-     String newFileName= UUID.randomUUID().toString()+".png";
-
-     //保存文件
-     file.transferTo(new File("E:/trainingadmin/"+originalFilename));
-     return Result.success();
-    }*/
-    @Autowired
-    private AliyunOSSOperator aliyunOSSOperator;
+    public UploadController(AliyunOSSOperator aliyunOSSOperator) {
+        this.aliyunOSSOperator = aliyunOSSOperator;
+    }
 
     @PostMapping("/upload")
-    public Result upload(MultipartFile file) throws Exception {
-        log.info("文件上传：{}",file.getOriginalFilename());
+    public Result upload(MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("请选择要上传的文件");
+        }
+        String originalFilename = file.getOriginalFilename();
+        log.info("文件上传：{}", originalFilename);
 
-        //将文件交给OSS存储管理
-        String url= aliyunOSSOperator.upload(file.getBytes(),file.getOriginalFilename());
+        // 校验图片扩展名，避免上传任意类型的文件
+        String lowerName = originalFilename == null ? "" : originalFilename.toLowerCase();
+        if (!(lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")
+                || lowerName.endsWith(".png") || lowerName.endsWith(".gif")
+                || lowerName.endsWith(".webp"))) {
+            throw new BusinessException("仅支持 jpg、jpeg、png、gif、webp 格式的图片");
+        }
 
-        //将文件交给OSS存储管理
-        log.info("文件上传OSS{}",url);
-
+        String url = aliyunOSSOperator.upload(file.getBytes(), originalFilename);
+        log.info("文件上传 OSS 成功：{}", url);
         return Result.success(url);
     }
 }

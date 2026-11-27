@@ -3,21 +3,25 @@ package com.trainingadmin.service.impl;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.trainingadmin.mapper.LogMapper;
+import com.trainingadmin.pojo.OperateLog;
 import com.trainingadmin.pojo.PageResult;
 import com.trainingadmin.service.LogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class LogServiceImpl implements LogService {
 
     @Autowired
-    private LogMapper logMapper; // 注入新写的 Mapper
+    private LogMapper logMapper;
 
     @Override
-    public PageResult page(Integer page, Integer pageSize) {
+    public PageResult<OperateLog> page(Integer page, Integer pageSize) {
         PageHelper.startPage(page, pageSize);
-        Page<?> p = (Page<?>) logMapper.list();
-        return new PageResult(p.getTotal(), p.getResult());
+        List<OperateLog> list = logMapper.list();
+        Page<OperateLog> p = (Page<OperateLog>) list;
+        return new PageResult<>(p.getTotal(), p.getResult());
     }
 }

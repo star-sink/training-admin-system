@@ -63,7 +63,7 @@ public class StudentController {
     public Result page(StudentQueryParam studentQueryParam) {
         log.info("分页查询学员: {}", studentQueryParam);
         // 调用 Service 层分页查询，内部由 PageHelper 完成物理分页
-        PageResult pageResult = studentService.page(studentQueryParam);
+        PageResult<Student> pageResult = studentService.page(studentQueryParam);
         // 统一返回 code=1、msg=success，并将分页数据放入 data
         return Result.success(pageResult);
     }

@@ -46,7 +46,7 @@ public class StudentServiceImpl implements StudentService {
      * @return 分页结果（total + rows）
      */
     @Override
-    public PageResult page(StudentQueryParam studentQueryParam) {
+    public PageResult<Student> page(StudentQueryParam studentQueryParam) {
         // 1. 设置分页参数 (当前页码, 每页记录数)
         PageHelper.startPage(studentQueryParam.getPage(), studentQueryParam.getPageSize());
 
@@ -57,7 +57,7 @@ public class StudentServiceImpl implements StudentService {
         Page<Student> p = (Page<Student>) list;
 
         // 4. 封装返回结果：total 为总记录数，rows 为当前页数据
-        return new PageResult(p.getTotal(), p.getResult());
+        return new PageResult<>(p.getTotal(), p.getResult());
     }
 
     /**

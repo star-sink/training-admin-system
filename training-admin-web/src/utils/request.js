@@ -1,38 +1,41 @@
-import axios from 'axios'
-import { ElMessage } from 'element-plus'
-import router from '../router'
+import axios from "axios";
+import { ElMessage } from "element-plus";
+import router from "../router";
 
-//创建axios实例对象
+// 创建 axios 实例：开发环境通过 Vite 代理把 /api 转发到后端
 const request = axios.create({
-  baseURL: '/api',
-  timeout: 600000
-})
+  baseURL: "/api",
+  timeout: 15000,
+});
 
-//axios的请求 request 拦截器, 每次请求获取localStorage中的loginUser, 从中获取到token, 在请求头token中携带到服务端
-request.interceptors.request.use(
-  (config) => {
-    let loginUser = JSON.parse(localStorage.getItem('loginUser'))
-    console.log(localStorage.getItem('loginUser'))
-    if (loginUser) {
-      config.headers.token = loginUser.token
+// 请求拦截器：从本地存储读取登录信息，自动携带 token
+request.interceptors.request.use((config) => {
+  const raw = localStorage.getItem("loginUser");
+  if (raw) {
+    try {
+      const loginUser = JSON.parse(raw);
+      if (loginUser?.token) {
+        config.headers.token = loginUser.token;
+      }
+    } catch {
+      localStorage.removeItem("loginUser");
     }
-    return config
   }
-)
+  return config;
+});
 
-//axios的响应 response 拦截器
+// 响应拦截器：直接返回业务数据；401 时跳转登录页
 request.interceptors.response.use(
-  (response) => { //成功回调
-    return response.data
-  },
-  (error) => { //失败回调
-    //如果响应的状态码为401, 则路由到登录页面
-    if (error.response.status === 401) {
-      ElMessage.error('登录失效, 请重新登录')
-      router.push('/login')
+  (response) => response.data,
+  (error) => {
+    if (error.response?.status === 401) {
+      ElMessage.error("登录已失效，请重新登录");
+      router.push("/login");
+    } else if (!error.response) {
+      ElMessage.error("网络异常，请稍后重试");
     }
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
-export default request
+export default request;

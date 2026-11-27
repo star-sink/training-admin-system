@@ -1,211 +1,190 @@
-# 教育培训管理系统（后端）
+# 教育培训管理系统
 
-## 1. 📖 项目简介
+一套面向培训机构教务场景的前后端分离管理系统，围绕 **部门 — 员工 — 班级 — 学员** 主线提供人员与教学组织管理能力，并结合 JWT 认证、BCrypt 密码加密与 AOP 操作审计实现安全访问和操作留痕。
 
-教育培训管理系统是一套面向培训机构教务场景的后端服务，围绕“部门—员工—班级—学员”主线提供人员与教学组织管理能力，并结合 JWT 认证与 AOP 操作日志实现安全访问和操作审计。
+- **后端**：`training-admin-system`（Spring Boot 4 + MyBatis + MySQL）
+- **前端**：`training-admin-web`（Vue 3 + Vite + Element Plus）
+- **数据库脚本**：`training.sql`
 
-系统采用前后端分离架构，本仓库仅包含 Spring Boot 后端服务，不包含 Vue 前端工程。核心业务模块包括：
-
-- **部门管理**：部门的查询、新增、修改与删除。
-- **员工管理**：员工分页与条件查询、新增、修改、删除，工作经历随员工信息一并维护。
-- **班级管理**：班级分页与条件查询、新增、修改、删除，按开课/结课日期实时计算班级状态。
-- **学员管理**：学员分页与条件查询、新增、修改、删除，以及违纪次数与扣分处理。
-- **认证鉴权**：登录成功后签发 JWT，后续请求通过请求头 `token` 访问受保护接口。
-- **操作审计**：自定义 `@Log` 注解结合 AOP，将增删改操作记录到 `operate_log` 表。
-- **报表统计与文件上传**：提供员工、学员统计图表数据，并支持头像等文件上传至阿里云 OSS。
-
-## 2. 🛠 技术栈
-
-| 分类 | 技术 |
-| --- | --- |
-| 开发语言 | Java 21 |
-| 后端框架 | Spring Boot 4.0.8、Spring MVC、Spring AOP（AspectJ） |
-| 持久层 | MyBatis（mybatis-spring-boot-starter 4.0.1）、PageHelper 1.4.7 |
-| 数据库 | MySQL 8、JDBC、HikariCP |
-| 认证 | JJWT 0.12.6（JWT 生成与校验） |
-| JSON | Jackson（`tools.jackson`） |
-| 文件存储 | 阿里云 OSS SDK V2 0.6.0 |
-| 日志 | SLF4J、Logback、MyBatis 标准输出 |
-| 构建与工具 | Maven、Lombok |
-| 前端 | Vue（独立工程，本仓库不包含） |
-
-## 3. 📁 目录结构
-
-```text
-web-ai-project02/
-├── README.md
-├── training.sql
-├── .gitignore
-└── tlias-web-management/
-    ├── pom.xml
-    └── src/
-        ├── main/
-        │   ├── java/com/trainingadmin/
-        │   │   ├── TliasWebManagementApplication.java
-        │   │   ├── anno/Log.java
-        │   │   ├── aop/OperateLogAspect.java
-        │   │   ├── config/WebConfig.java
-        │   │   ├── controller/
-        │   │   │   ├── LoginController.java
-        │   │   │   ├── DeptController.java
-        │   │   │   ├── EmpController.java
-        │   │   │   ├── ClassController.java
-        │   │   │   ├── StudentController.java
-        │   │   │   ├── ReportController.java
-        │   │   │   ├── LogController.java
-        │   │   │   ├── UploadController.java
-        │   │   │   └── SessionController.java
-        │   │   ├── service/
-        │   │   │   ├── DeptService.java
-        │   │   │   ├── EmpService.java
-        │   │   │   ├── ClassService.java
-        │   │   │   ├── StudentService.java
-        │   │   │   ├── ReportService.java
-        │   │   │   ├── LogService.java
-        │   │   │   ├── EmpLogService.java
-        │   │   │   └── impl/
-        │   │   ├── mapper/
-        │   │   │   ├── DeptMapper.java
-        │   │   │   ├── EmpMapper.java
-        │   │   │   ├── EmpExprMapper.java
-        │   │   │   ├── ClassMapper.java
-        │   │   │   ├── StudentMapper.java
-        │   │   │   ├── LogMapper.java
-        │   │   │   ├── EmpLogMapper.java
-        │   │   │   └── OperateLogMapper.java
-        │   │   ├── pojo/
-        │   │   ├── exception/
-        │   │   ├── filter/
-        │   │   ├── interceptor/
-        │   │   └── utils/
-        │   └── resources/
-        │       ├── application.yml
-        │       ├── logback.xml
-        │       ├── com/trainingadmin/mapper/
-        │       │   ├── EmpMapper.xml
-        │       │   ├── EmpExprMapper.xml
-        │       │   ├── ClassMapper.xml
-        │       │   ├── StudentMapper.xml
-        │       │   └── LogMapper.xml
-        │       └── static/upload.html
-        └── test/java/com/trainingadmin/
-            ├── TliasWebManagementApplicationTests.java
-            ├── JwtTest.java
-            ├── LogTest.java
-            ├── ThreadLocalTest.java
-            ├── UUIDTest.java
-            └── Demo.java
-```
-
-说明：`target/`、`.idea/` 等构建产物与 IDE 配置目录未列入目录树。
-
-## 4. ✨ 功能特性
+## 1. 功能特性
 
 ### 认证与鉴权
 
-- 员工使用用户名、密码登录，服务端签发有效期 12 小时的 JWT。
-- 除 `/login` 外，所有接口统一经过 `TokenInterceptor` 校验请求头 `token`；令牌缺失或非法返回 HTTP 401。
+- 用户名 / 密码登录，密码使用 **BCrypt** 加盐哈希存储，数据库中不保存明文。
+- 登录成功后签发 JWT，除 `/login` 外的接口统一通过拦截器校验请求头 `token`，非法或过期返回 HTTP 401。
 - 校验通过后将当前员工 ID 写入 `ThreadLocal`，请求结束后自动清理，避免线程复用导致操作人串号。
 
 ### 基础数据管理
 
-- 部门、员工、班级、学员均提供分页查询、条件筛选、新增、修改与删除能力。
-- 员工支持工作经历的一对多维护；新增、修改、批量删除均在事务中完成。
-- 班级根据当前日期与开课/结课日期实时计算“未开班 / 已开班 / 已结课”状态。
-- 学员违纪处理在 SQL 中原子累加违纪次数与扣分，避免并发覆盖。
+- **部门管理**：查询、新增、修改、删除。
+- **员工管理**：分页与条件查询、新增、修改、批量删除，工作经历随员工信息一并维护。
+- **班级管理**：分页与条件查询、新增、修改、删除，根据当前日期与开课/结课日期实时计算班级状态。
+- **学员管理**：分页与条件查询、新增、修改、删除，以及违纪次数与扣分处理。
 
-### 分页与查询
+### 分页与统计
 
 - 使用 PageHelper 实现物理分页，统一返回 `PageResult { total, rows }`。
-- Mapper 使用动态 SQL 支持按名称、性别、学历、班级、时间区间等条件组合查询。
+- Mapper 使用动态 SQL 支持名称、性别、学历、班级、时间区间等条件组合查询。
+- 提供员工职位分布、员工性别分布、学员学历分布、各班级人数四类图表数据。
 
 ### 操作审计
 
-- 通过自定义 `@Log` 注解标记增删改接口，`OperateLogAspect` 以环绕通知记录操作人、时间、类名、方法名、参数、返回值与耗时。
-- 审计日志写入 `operate_log` 表；超长文本按字段长度截断，日志入库失败不影响主业务。
-- `/log/page` 支持分页查看操作日志，并关联员工表返回操作人姓名。
+- 自定义 `@Log` 注解标记增删改接口，`OperateLogAspect` 通过环绕通知记录操作人、时间、类名、方法名、参数、返回值与耗时。
+- 审计日志写入 `operate_log` 表，参数与返回值超长时自动截断；日志写入失败不影响主业务。
+- `/log/page` 分页查看操作日志，并关联员工表展示操作人姓名。
+- 员工密码字段标记为只写，接口响应和操作日志中均不会输出。
 
-### 报表与文件上传
+### 文件上传
 
-- 提供员工职位分布、员工性别分布、学员学历分布、各班级人数四类统计数据。
-- 文件上传至阿里云 OSS，按 `yyyy/MM/UUID.扩展名` 生成对象路径并返回访问 URL。
+- 支持头像等图片上传至阿里云 OSS，按 `yyyy/MM/UUID.扩展名` 生成对象路径并返回访问 URL。
+- AccessKey 通过环境变量注入；未配置 OSS 时应用仍可正常启动，仅上传接口不可用。
 
-## 5. 🚀 快速开始
+## 2. 技术栈
 
-### 5.1 环境准备
+### 后端
+
+| 分类 | 技术 |
+| --- | --- |
+| 开发语言 | Java 21 |
+| 框架 | Spring Boot 4、Spring MVC、Spring AOP（AspectJ） |
+| 持久层 | MyBatis、PageHelper 1.4.7 |
+| 数据库 | MySQL 8、HikariCP |
+| 认证 | JJWT 0.12.6 |
+| 密码加密 | Spring Security Crypto（BCrypt） |
+| 文件存储 | 阿里云 OSS SDK V2 |
+| 构建工具 | Maven、Lombok |
+
+### 前端
+
+| 分类 | 技术 |
+| --- | --- |
+| 框架 | Vue 3（Composition API） |
+| 构建工具 | Vite 3 |
+| UI 组件 | Element Plus |
+| 路由与状态 | Vue Router 4、Pinia |
+| HTTP | Axios |
+| 图表 | ECharts |
+
+## 3. 项目结构
+
+```text
+web-ai-project02/
+├── README.md
+├── training.sql                     # 建库建表 + 测试数据
+├── training-admin-system/           # Spring Boot 后端
+│   ├── pom.xml
+│   └── src/main/
+│       ├── java/com/trainingadmin/
+│       │   ├── TrainingAdminApplication.java
+│       │   ├── anno/                # 自定义 @Log 注解
+│       │   ├── aop/                 # 操作日志切面
+│       │   ├── config/              # Web 配置、拦截器、密码加密器
+│       │   ├── controller/          # REST 接口
+│       │   ├── exception/           # 业务异常与全局异常处理
+│       │   ├── interceptor/         # JWT 登录拦截器
+│       │   ├── mapper/              # MyBatis Mapper 接口
+│       │   ├── pojo/                # 实体与查询参数
+│       │   ├── service/             # 业务接口与实现
+│       │   └── utils/               # JWT、ThreadLocal、OSS 工具
+│       └── resources/
+│           ├── application.yml
+│           ├── logback.xml
+│           └── com/trainingadmin/mapper/   # MyBatis XML
+└── training-admin-web/              # Vue 3 前端
+    ├── package.json
+    ├── vite.config.js
+    └── src/
+        ├── api/                     # 接口封装
+        ├── router/                  # 路由与登录守卫
+        ├── utils/                   # Axios 实例与拦截器
+        └── views/                   # 登录、首页与业务页面
+```
+
+## 4. 快速开始
+
+### 4.1 环境准备
 
 | 环境 | 版本要求 |
 | --- | --- |
 | JDK | 21 |
 | Maven | 3.9+ |
 | MySQL | 8.0+ |
+| Node.js | 18+ |
 
-```bash
-java -version
-mvn -v
-mysql --version
-```
-
-### 5.2 初始化数据库
-
-项目根目录的 `training.sql` 包含建库、建表语句及测试数据。执行前请注意：
-
-- 脚本会先执行 `DROP TABLE IF EXISTS` 再重建表，已有数据的环境请先备份。
-- 脚本当前创建并使用的数据库名为 `training`，请打开脚本首行确认建库名称，并保证后续 `application.yml` 中的数据库名与之一致。
+### 4.2 初始化数据库
 
 ```bash
 mysql --default-character-set=utf8mb4 -uroot -p < training.sql
 ```
 
-脚本内置测试账号：`zhangsan`、`lisi`、`wangwu`，密码均为 `123456`。
+脚本会创建 `training` 数据库、7 张业务表并写入测试数据。注意：脚本包含 `DROP TABLE IF EXISTS`，已有数据的环境请先备份。
 
-### 5.3 修改配置
+内置测试账号（密码均为 `123456`，数据库中保存的是 BCrypt 哈希）：
 
-根据本机环境调整 `tlias-web-management/src/main/resources/application.yml` 中的数据库连接信息：
-
-| 配置项 | 说明 |
+| 用户名 | 姓名 |
 | --- | --- |
-| `spring.datasource.url` | MySQL 地址及库名，库名需与 `training.sql` 创建的库名一致 |
-| `spring.datasource.username` | 数据库用户名 |
-| `spring.datasource.password` | 数据库密码 |
+| `zhangsan` | 张三 |
+| `lisi` | 李四 |
+| `wangwu` | 王五 |
 
-文件上传功能依赖阿里云 OSS。使用 `/upload` 前，需要配置 `aliyun.oss.endpoint`、`aliyun.oss.bucketName`、`aliyun.oss.region`，并设置凭证环境变量：
+### 4.3 配置后端
 
-```bash
-export OSS_ACCESS_KEY_ID="你的 AccessKey ID"
-export OSS_ACCESS_KEY_SECRET="你的 AccessKey Secret"
-```
+`training-admin-system/src/main/resources/application.yml` 支持环境变量覆盖，本地开发可直接使用默认值：
 
-PowerShell：
+| 环境变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `DB_URL` | `jdbc:mysql://localhost:3306/training...` | 数据库连接地址 |
+| `DB_USERNAME` | `root` | 数据库用户名 |
+| `DB_PASSWORD` | `123456` | 数据库密码 |
+| `JWT_SECRET` | 内置演示密钥 | JWT 签名密钥，生产环境必须覆盖（≥32 字节） |
+| `JWT_EXPIRATION` | `43200000` | 令牌有效期（毫秒），默认 12 小时 |
+| `OSS_ENDPOINT` | 空 | 阿里云 OSS Endpoint |
+| `OSS_BUCKET_NAME` | 空 | Bucket 名称 |
+| `OSS_REGION` | 空 | Bucket 所在地域 |
+| `OSS_ACCESS_KEY_ID` | 空 | OSS AccessKey ID（SDK 从环境变量读取） |
+| `OSS_ACCESS_KEY_SECRET` | 空 | OSS AccessKey Secret |
+
+示例（PowerShell）：
 
 ```powershell
-$env:OSS_ACCESS_KEY_ID = "你的 AccessKey ID"
-$env:OSS_ACCESS_KEY_SECRET = "你的 AccessKey Secret"
+$env:DB_PASSWORD = "你的数据库密码"
+$env:JWT_SECRET = "至少32字节的随机字符串"
+$env:OSS_ENDPOINT = "https://oss-cn-beijing.aliyuncs.com"
+$env:OSS_BUCKET_NAME = "你的Bucket"
+$env:OSS_REGION = "cn-beijing"
+$env:OSS_ACCESS_KEY_ID = "你的AccessKeyId"
+$env:OSS_ACCESS_KEY_SECRET = "你的AccessKeySecret"
 ```
 
-仅在使用 `/upload` 时需要有效的 OSS 配置与访问凭证。
+仅在使用 `/upload` 时需要有效的 OSS 配置。
 
-### 5.4 启动项目
-
-在项目根目录执行：
+### 4.4 启动后端
 
 ```bash
-cd tlias-web-management
+cd training-admin-system
 mvn spring-boot:run
 ```
 
 服务启动后监听 `http://localhost:8081`。
 
-也可以打包后运行：
+打包运行：
 
 ```bash
 mvn clean package -DskipTests
 java -jar target/training-admin-system-0.0.1-SNAPSHOT.jar
 ```
 
-### 5.5 测试验证
+### 4.5 启动前端
 
-使用 `training.sql` 内置的 `zhangsan` 账号登录：
+```bash
+cd training-admin-web
+npm install
+npm run dev
+```
+
+浏览器访问 `http://localhost:5173`。Vite 已配置 `/api` 代理到 `http://localhost:8081`。
+
+### 4.6 验证登录
 
 ```bash
 curl -s -X POST "http://localhost:8081/login" \
@@ -219,14 +198,14 @@ curl -s -X POST "http://localhost:8081/login" \
 {"code":1,"msg":"success","data":{"id":1,"username":"zhangsan","name":"张三","token":"eyJ..."}}
 ```
 
-携带返回的 `token` 访问受保护接口：
+携带 token 访问受保护接口：
 
 ```bash
 TOKEN="把上一步返回的 token 粘贴到这里"
 curl -s "http://localhost:8081/depts" -H "token: $TOKEN"
 ```
 
-## 6. 📝 接口文档
+## 5. 接口文档
 
 除 `POST /login` 外，所有接口均需在请求头中携带 `token`。统一响应结构为 `Result { code, msg, data }`，`code = 1` 表示成功；分页数据位于 `data` 中的 `PageResult { total, rows }`。
 
@@ -260,15 +239,15 @@ curl -s "http://localhost:8081/depts" -H "token: $TOKEN"
 | GET | `/report/empGenderData` | 员工性别分布 |
 | GET | `/report/studentDegreeData` | 学员学历分布 |
 | GET | `/report/studentCountData` | 各班级人数统计 |
-| GET | `/log/page?page=1&pageSize=10` | 操作日志分页查询，`page`、`pageSize` 必传 |
+| GET | `/log/page?page=1&pageSize=10` | 操作日志分页查询，参数可选 |
 | POST | `/upload` | 文件上传至 OSS，表单字段名 `file` |
 
 常用查询参数：
 
 - 员工分页：`page`、`pageSize`、`name`、`gender`、`begin`、`end`。
-- 班级分页：`page`、`pageSize`、`name`、`begin`、`end`。
+- 班级分页：`page`、`pageSize`、`name`、`begin`、`end`（按结课时间筛选）。
 - 学员分页：`page`、`pageSize`、`name`、`degree`、`clazzId`。
-- 操作日志分页：`page`、`pageSize`，两个参数均需传入。
+- 操作日志分页：`page`、`pageSize`，默认 `1` / `10`。
 
 报表接口返回结构：
 
@@ -277,12 +256,12 @@ curl -s "http://localhost:8081/depts" -H "token: $TOKEN"
 - `GET /report/studentDegreeData`：`[{ name, value }]`。
 - `GET /report/studentCountData`：`{ clazzList: [], dataList: [] }`。
 
-## 7. 🧠 架构设计
+## 6. 架构设计
 
 ### 分层结构
 
 ```text
-客户端
+浏览器（Vue 3 + Element Plus）
   │  HTTP/JSON，请求头携带 token
   ▼
 TokenInterceptor（JWT 校验 / 401 / 写入 ThreadLocal）
@@ -296,22 +275,24 @@ Mapper（MyBatis XML / 注解 SQL）
 MySQL（training）
 ```
 
-- **Controller**：负责请求接收、参数绑定与 `Result` 封装。
-- **Service**：承载业务规则、事务控制、PageHelper 分页与班级状态计算。
-- **Mapper**：通过 MyBatis 接口与 XML 完成数据访问，动态 SQL 处理条件查询与选择性更新。
-
 ### 认证与上下文传递
 
-- 登录成功后由 `JwtUtils` 签发有效期 12 小时的 JWT，载荷包含员工 `id` 与 `username`。
+- 登录成功后由 `JwtUtils` 签发 JWT，载荷包含员工 `id` 与 `username`；密钥和有效期来自配置项。
 - `TokenInterceptor` 拦截除 `/login` 外的全部请求，校验失败返回 HTTP 401。
 - 校验通过后将员工 ID 写入 `CurrentHolder` 的 `ThreadLocal`，供 AOP 获取当前操作人；请求结束后在 `afterCompletion` 中清理。
 
+### 密码安全
+
+- 使用 `BCryptPasswordEncoder` 对密码加盐哈希，登录时使用 `matches` 校验。
+- 兼容历史明文数据：首次登录校验通过后自动升级为 BCrypt 哈希。
+- `Emp.password` 使用 `@JsonProperty(access = WRITE_ONLY)`，避免接口响应和审计日志泄露密码。
+
 ### 全局异常处理
 
-`GlobaExceptionHandler` 使用 `@RestControllerAdvice` 统一处理异常：
+`GlobalExceptionHandler` 使用 `@RestControllerAdvice` 统一处理异常：
 
 - `BusinessException`：返回具体业务提示。
-- `DuplicateKeyException`：解析唯一键冲突并返回“xxx已存在”。
+- `DuplicateKeyException`：安全解析唯一键冲突并返回“xxx已存在”。
 - 其他异常：记录完整日志，对外返回统一提示，避免暴露内部细节。
 
 ### AOP 操作审计
@@ -320,16 +301,32 @@ MySQL（training）
 - 记录写入 `operate_log` 表，`/log/page` 通过 `LogMapper` 分页查询该表，并关联 `emp` 表展示操作人姓名。
 - 参数与返回值序列化为 JSON 文本；超过 2000 字符自动截断；日志写入异常只打印错误，不影响业务结果。
 
-### 事务、分页与数据一致性
+### 事务与数据一致性
 
 - 员工新增、修改、删除使用事务，保证 `emp` 与 `emp_expr` 两张表的数据一致。
 - 修改员工时采用“先删除旧工作经历、再批量插入新经历”的策略。
-- PageHelper 负责物理分页，Service 统一封装 `PageResult`。
+- 员工新增日志使用 `REQUIRES_NEW` 独立事务，主业务回滚时日志仍可保留。
 - 学员违纪处理在 SQL 中直接执行次数加一、扣分累加，保证并发场景下的原子性。
 
 ### 云存储生命周期
 
 - `AliyunOSSOperator` 在 `@PostConstruct` 中初始化 OSS 客户端，在 `@PreDestroy` 中关闭。
-- 访问凭证通过环境变量注入，上传对象按年月目录与 UUID 命名，避免文件名冲突。
+- 未配置 OSS 时跳过客户端初始化，不影响应用启动；上传接口会返回明确的业务提示。
+- 上传对象按年月目录与 UUID 命名，避免文件名冲突。
 
-> 说明：本项目为教学示例，密码采用明文存储与比对。
+## 7. 项目亮点（可用于简历）
+
+- 基于 Spring Boot 4 + MyBatis 实现分层 REST 服务，使用 PageHelper 完成物理分页与动态条件查询。
+- 基于 JWT + 拦截器 + ThreadLocal 实现无状态登录鉴权与操作人上下文传递，请求结束自动清理。
+- 基于自定义注解 + Spring AOP 实现操作审计，异步关注点与业务代码解耦，日志入库失败不影响主流程。
+- 使用 BCrypt 加盐哈希存储密码，并通过 `WRITE_ONLY` 序列化策略避免密码泄露到接口响应与审计日志。
+- 使用 `@Transactional` 保证员工与工作经历的多表一致性，通过 `REQUIRES_NEW` 实现独立日志事务。
+- 前端基于 Vue 3 + Element Plus + Axios 拦截器 + 路由守卫实现前后端分离与登录态管理。
+- 敏感配置（数据库密码、JWT 密钥、OSS 凭证）统一支持环境变量覆盖。
+
+## 8. 后续可优化方向
+
+- 引入 Spring Security 与 RBAC，实现菜单/按钮级权限控制。
+- 补充 Service 层单元测试与接口集成测试。
+- 增加参数校验（Bean Validation）与统一错误码。
+- 使用 Docker Compose 一键启动 MySQL、后端与前端。

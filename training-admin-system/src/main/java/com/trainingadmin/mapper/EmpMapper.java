@@ -51,8 +51,8 @@ public interface EmpMapper {
      *新增员工基本信息
      */
     @Options(useGeneratedKeys = true,keyProperty = "id")
-    @Insert("insert into emp(username, name, gender, phone, job, salary, image, entry_date, dept_id, create_time, update_time)" +
-            "values (#{username},#{name},#{gender},#{phone},#{job},#{salary},#{image},#{entryDate},#{deptId},#{createTime},#{updateTime})")
+    @Insert("insert into emp(username, password, name, gender, phone, job, salary, image, entry_date, dept_id, create_time, update_time)" +
+            "values (#{username},#{password},#{name},#{gender},#{phone},#{job},#{salary},#{image},#{entryDate},#{deptId},#{createTime},#{updateTime})")
     void insert(Emp emp);
 
 
@@ -88,5 +88,14 @@ public interface EmpMapper {
     List<Map<String, Object>> countEmpGenderData();
 
 
-    Emp selectByUsernameAndPassword(Emp emp);
+    /**
+     * 根据用户名查询员工（包含密码哈希，用于登录校验）
+     */
+    Emp selectByUsername(String username);
+
+    /**
+     * 更新密码哈希（用于历史明文密码的自动升级）
+     */
+    @Update("update emp set password = #{password} where id = #{id}")
+    void updatePassword(@Param("id") Integer id, @Param("password") String password);
 }

@@ -1,197 +1,210 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
-import { queryPageApi , addApi, queryInfoApi, updateApi, deleteApi} from '@/api/clazz'
-import { queryAllApi as queryAllEmpApi } from '@/api/emp'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { onMounted, ref, watch } from "vue";
+import {
+  queryPageApi,
+  addApi,
+  queryInfoApi,
+  updateApi,
+  deleteApi,
+} from "@/api/clazz";
+import { queryAllApi as queryAllEmpApi } from "@/api/emp";
+import { ElMessage, ElMessageBox } from "element-plus";
 
 //学科列表数据
-const subjects = ref([{ name: 'Java', value: 1 },{ name: '前端', value: 2 },{ name: '大数据', value: 3 },{ name: 'Python', value: 4 },{ name: 'Go', value: 5 },{ name: '嵌入式', value: 6 }])
+const subjects = ref([
+  { name: "Java", value: 1 },
+  { name: "前端", value: 2 },
+  { name: "大数据", value: 3 },
+  { name: "Python", value: 4 },
+  { name: "Go", value: 5 },
+  { name: "嵌入式", value: 6 },
+]);
 //搜索表单对象
-let searchClazz = ref({begin:'', end:'', date:[], name:''})
+let searchClazz = ref({ begin: "", end: "", date: [], name: "" });
 //列表展示数据
-let tableData = ref([])
+let tableData = ref([]);
 
 //钩子函数 - 页面加载时触发
 onMounted(() => {
-  queryPage()
-  queryAllEmp()
-})
+  queryPage();
+  queryAllEmp();
+});
 
 //所有的员工数据
-let emps = ref([])
+let emps = ref([]);
 //加载所有的员工数据
 const queryAllEmp = async () => {
-  let result = await queryAllEmpApi()
-  if(result.code) {
-    emps.value = result.data
+  let result = await queryAllEmpApi();
+  if (result.code) {
+    emps.value = result.data;
   }
-}
+};
 
 //分页组件
-const pagination = ref({currentPage: 1, pageSize: 10, total: 0})
+const pagination = ref({ currentPage: 1, pageSize: 10, total: 0 });
 //每页展示记录数发生变化时触发
 const handleSizeChange = (pageSize) => {
-  pagination.value.pageSize = pageSize
-  queryPage()
-}
+  pagination.value.pageSize = pageSize;
+  queryPage();
+};
 //当前页码发生变化时触发
 const handleCurrentChange = (page) => {
-  pagination.value.currentPage = page
-  queryPage()
-}
+  pagination.value.currentPage = page;
+  queryPage();
+};
 
 //分页条件查询
 const queryPage = async () => {
   const result = await queryPageApi(
-      searchClazz.value.begin,
-      searchClazz.value.end,
-      searchClazz.value.name,
-      pagination.value.currentPage,
-      pagination.value.pageSize
+    searchClazz.value.begin,
+    searchClazz.value.end,
+    searchClazz.value.name,
+    pagination.value.currentPage,
+    pagination.value.pageSize
   );
 
-  if(result.code) {
-    tableData.value = result.data.rows
-    pagination.value.total = result.data.total
+  if (result.code) {
+    tableData.value = result.data.rows;
+    pagination.value.total = result.data.total;
   }
-}
+};
 
 //清空搜索栏
 const clear = () => {
-  searchClazz.value = {begin:'', end:'', date:[], name:''}
-  queryPage()
-}
+  searchClazz.value = { begin: "", end: "", date: [], name: "" };
+  queryPage();
+};
 
-//监听searchEmp的date属性
-watch(() => searchClazz.value.date, (newVal, oldVal) => {
-  console.log(`newVal : ${newVal} ; oldVal: ${oldVal} `)
-  if(newVal.length > 0) {
-    console.log('-----------');
-    searchClazz.value.begin = newVal[0]
-    searchClazz.value.end = newVal[1]
-  }else {
-    console.log('==========');
-    searchClazz.value.begin = ''
-    searchClazz.value.end = ''
+// 监听日期范围变化，拆分出开始、结束日期
+watch(
+  () => searchClazz.value.date,
+  (newVal) => {
+    if (newVal.length > 0) {
+      searchClazz.value.begin = newVal[0];
+      searchClazz.value.end = newVal[1];
+    } else {
+      searchClazz.value.begin = "";
+      searchClazz.value.end = "";
+    }
   }
-})
-
-
+);
 
 //----------- 新增 / 修改 ---------------------------
-let dialogFormVisible = ref(false) //控制新增/修改的对话框的显示与隐藏
-let labelWidth = ref(80) //form表单label的宽度
-let formTitle = ref('') //表单的标题
+let dialogFormVisible = ref(false); //控制新增/修改的对话框的显示与隐藏
+let labelWidth = ref(80); //form表单label的宽度
+let formTitle = ref(""); //表单的标题
 //员工对象-表单数据绑定
 let clazz = ref({
-  id: '',
-  name: '',
-  room: '',
-  beginDate: '',
-  endDate: '',
-  subject: '',
-  masterId: ''
-})
+  id: "",
+  name: "",
+  room: "",
+  beginDate: "",
+  endDate: "",
+  subject: "",
+  masterId: "",
+});
 
 //清空表单
 const clearClazz = () => {
   clazz.value = {
-    id: '',
-    name: '',
-    room: '',
-    beginDate: '',
-    endDate: '',
-    subject: '',
-    masterId: ''
-  }
-}
+    id: "",
+    name: "",
+    room: "",
+    beginDate: "",
+    endDate: "",
+    subject: "",
+    masterId: "",
+  };
+};
 
 //新增班级
 const addClazz = () => {
-  dialogFormVisible.value = true
-  formTitle.value = '新增班级'
-  clearClazz()
-}
+  dialogFormVisible.value = true;
+  formTitle.value = "新增班级";
+  clearClazz();
+};
 
 //修改班级
 const updateClazz = async (id) => {
-  clearClazz()
-  dialogFormVisible.value = true
-  let result = await queryInfoApi(id)
-  if(result.code){
-    clazz.value = result.data
+  clearClazz();
+  dialogFormVisible.value = true;
+  let result = await queryInfoApi(id);
+  if (result.code) {
+    clazz.value = result.data;
   }
-}
+};
 
 //表单校验规则
-const clazzFormRef = ref()
+const clazzFormRef = ref();
 const rules = ref({
   name: [
-    { required: true, message: '班级名称为必填项', trigger: 'blur' },
-    { min: 4, max: 30, message: '用户名长度为4-30个字', trigger: 'blur' }
+    { required: true, message: "班级名称为必填项", trigger: "blur" },
+    { min: 4, max: 30, message: "用户名长度为4-30个字", trigger: "blur" },
   ],
   room: [
-    { min: 1, max: 20, message: '班级教室长度为1-20个字', trigger: 'blur' }
+    { min: 1, max: 20, message: "班级教室长度为1-20个字", trigger: "blur" },
   ],
-  beginDate: [{ required: true, message: '开课时间为必填项', trigger: 'change' }],
-  endDate: [{ required: true, message: '结课时间为必填项', trigger: 'change' }],
-  subject: [{ required: true, message: '学科为必填项', trigger: 'change' }]
-})
+  beginDate: [
+    { required: true, message: "开课时间为必填项", trigger: "change" },
+  ],
+  endDate: [{ required: true, message: "结课时间为必填项", trigger: "change" }],
+  subject: [{ required: true, message: "学科为必填项", trigger: "change" }],
+});
 
 //重置表单
 const resetForm = (clazzForm) => {
-  if (!clazzForm) return
-  clazzForm.resetFields()
-}
+  if (!clazzForm) return;
+  clazzForm.resetFields();
+};
 
-//-------------保存班级信息 
+//-------------保存班级信息
 const save = (clazzForm) => {
-  console.log('clazzForm: ' + clazz);
-  // debugger;
   //表单校验
-  if(!clazzForm) return
+  if (!clazzForm) return;
   clazzForm.validate(async (valid) => {
-    if(valid) {
-      let api 
-      if(clazz.value.id) {
-        api = updateApi(clazz.value)
-      }else {
-        api = addApi(clazz.value)
+    if (valid) {
+      let api;
+      if (clazz.value.id) {
+        api = updateApi(clazz.value);
+      } else {
+        api = addApi(clazz.value);
       }
 
-      let result = await api
-      if(result.code) {
-        ElMessage.success('操作成功')
-        dialogFormVisible.value = false
-        queryPage()
-      }else {
-        ElMessage.error(result.msg)
+      let result = await api;
+      if (result.code) {
+        ElMessage.success("操作成功");
+        dialogFormVisible.value = false;
+        queryPage();
+      } else {
+        ElMessage.error(result.msg);
       }
-    }else {
-      console.log('valid: '+ valid);
-      
-      return false
+    } else {
+      return false;
     }
-  })
-}
-
+  });
+};
 
 //------- 删除班级
 //根据ID删除单个班级
 const delById = async (id) => {
-  ElMessageBox.confirm('您确认删除此数据吗?' , '删除班级', {confirmButtonText:'确认', cancelButtonText:'取消',type:'warning'})
+  ElMessageBox.confirm("您确认删除此数据吗?", "删除班级", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
     .then(async () => {
-      let result =  await deleteApi(id)
-      if(result.code) {
-        ElMessage.success('删除成功')
-        queryPage()
-      }else {
-        ElMessage.error(result.msg)
+      let result = await deleteApi(id);
+      if (result.code) {
+        ElMessage.success("删除成功");
+        queryPage();
+      } else {
+        ElMessage.error(result.msg);
       }
-    }).catch(() => {
-      ElMessage.info('取消删除')
     })
-}
+    .catch(() => {
+      ElMessage.info("取消删除");
+    });
+};
 </script>
 
 <template>
@@ -223,14 +236,25 @@ const delById = async (id) => {
         </el-form-item>
       </el-form>
 
-      <el-button class="btn-primary" @click="addClazz(); resetForm(clazzFormRef)">
+      <el-button
+        class="btn-primary"
+        @click="
+          addClazz();
+          resetForm(clazzFormRef);
+        "
+      >
         <el-icon><Plus /></el-icon>新增班级
       </el-button>
     </div>
 
     <div class="table-card">
       <el-table :data="tableData" style="width: 100%" fit>
-        <el-table-column type="index" label="序号" width="56" class-name="cell-muted" />
+        <el-table-column
+          type="index"
+          label="序号"
+          width="56"
+          class-name="cell-muted"
+        />
         <el-table-column prop="name" label="班级名称" min-width="150" />
         <el-table-column prop="room" label="教室" min-width="90" />
         <el-table-column prop="masterName" label="班主任" min-width="90" />
@@ -246,10 +270,19 @@ const delById = async (id) => {
         <el-table-column label="操作" width="130" align="right">
           <template #default="scope">
             <div class="table-actions">
-              <el-button class="row-action" @click="updateClazz(scope.row.id); resetForm(clazzFormRef)">
+              <el-button
+                class="row-action"
+                @click="
+                  updateClazz(scope.row.id);
+                  resetForm(clazzFormRef);
+                "
+              >
                 编辑
               </el-button>
-              <el-button class="row-action row-action-danger" @click="delById(scope.row.id)">
+              <el-button
+                class="row-action row-action-danger"
+                @click="delById(scope.row.id)"
+              >
                 删除
               </el-button>
             </div>
@@ -271,7 +304,12 @@ const delById = async (id) => {
     </div>
 
     <el-dialog v-model="dialogFormVisible" :title="formTitle" width="520px">
-      <el-form :model="clazz" ref="clazzFormRef" :rules="rules" class="dialog-form">
+      <el-form
+        :model="clazz"
+        ref="clazzFormRef"
+        :rules="rules"
+        class="dialog-form"
+      >
         <el-form-item label="班级名称" :label-width="labelWidth" prop="name">
           <el-input v-model="clazz.name" />
         </el-form-item>
@@ -280,12 +318,16 @@ const delById = async (id) => {
           <el-input v-model="clazz.room" />
         </el-form-item>
 
-        <el-form-item label="开课时间" :label-width="labelWidth" prop="beginDate">
+        <el-form-item
+          label="开课时间"
+          :label-width="labelWidth"
+          prop="beginDate"
+        >
           <el-date-picker
             v-model="clazz.beginDate"
             type="date"
             value-format="YYYY-MM-DD"
-            style="width: 100%;"
+            style="width: 100%"
           />
         </el-form-item>
 
@@ -294,29 +336,47 @@ const delById = async (id) => {
             v-model="clazz.endDate"
             type="date"
             value-format="YYYY-MM-DD"
-            style="width: 100%;"
+            style="width: 100%"
           />
         </el-form-item>
 
         <el-form-item label="班主任" :label-width="labelWidth">
-          <el-select v-model="clazz.masterId" style="width: 100%;">
-            <el-option v-for="emp in emps" :label="emp.name" :value="emp.id" />
+          <el-select v-model="clazz.masterId" style="width: 100%">
+            <el-option
+              v-for="emp in emps"
+              :key="emp.id"
+              :label="emp.name"
+              :value="emp.id"
+            />
           </el-select>
         </el-form-item>
 
         <el-form-item label="学科" :label-width="labelWidth" prop="subject">
-          <el-select v-model="clazz.subject" style="width: 100%;">
-            <el-option v-for="sub in subjects" :label="sub.name" :value="sub.value" />
+          <el-select v-model="clazz.subject" style="width: 100%">
+            <el-option
+              v-for="sub in subjects"
+              :key="sub.value"
+              :label="sub.name"
+              :value="sub.value"
+            />
           </el-select>
         </el-form-item>
       </el-form>
 
       <template #footer>
         <span class="dialog-footer">
-          <el-button class="btn-text" @click="dialogFormVisible = false; resetForm(clazzFormRef)">
+          <el-button
+            class="btn-text"
+            @click="
+              dialogFormVisible = false;
+              resetForm(clazzFormRef);
+            "
+          >
             取消
           </el-button>
-          <el-button class="btn-primary" @click="save(clazzFormRef)">保存</el-button>
+          <el-button class="btn-primary" @click="save(clazzFormRef)"
+            >保存</el-button
+          >
         </span>
       </template>
     </el-dialog>

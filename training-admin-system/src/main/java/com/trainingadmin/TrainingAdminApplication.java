@@ -2,14 +2,15 @@ package com.trainingadmin;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.server.servlet.context.ServletComponentScan;
 
-@ServletComponentScan
+/**
+ * 教育培训管理系统启动类
+ */
 @SpringBootApplication
-public class TliasWebManagementApplication {
+public class TrainingAdminApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(TliasWebManagementApplication.class, args);
+        SpringApplication.run(TrainingAdminApplication.class, args);
     }
 
 }

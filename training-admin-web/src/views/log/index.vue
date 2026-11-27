@@ -1,37 +1,40 @@
 <script setup>
-import { onMounted, ref } from 'vue'
-import { queryPageApi} from '@/api/log'
+import { onMounted, ref } from "vue";
+import { queryPageApi } from "@/api/log";
 
 //列表展示数据
-let tableData = ref([])
+let tableData = ref([]);
 
 //钩子函数 - 页面加载时触发
 onMounted(() => {
-  queryPage()
-})
+  queryPage();
+});
 
 //分页组件
-const pagination = ref({currentPage: 1, pageSize: 15, total: 0})
+const pagination = ref({ currentPage: 1, pageSize: 15, total: 0 });
 //每页展示记录数发生变化时触发
 const handleSizeChange = (pageSize) => {
-  pagination.value.pageSize = pageSize
-  queryPage()
-}
+  pagination.value.pageSize = pageSize;
+  queryPage();
+};
 //当前页码发生变化时触发
 const handleCurrentChange = (page) => {
-  pagination.value.currentPage = page
-  queryPage()
-}
+  pagination.value.currentPage = page;
+  queryPage();
+};
 
 //分页条件查询
 const queryPage = async () => {
-  const result = await queryPageApi(pagination.value.currentPage,pagination.value.pageSize);
+  const result = await queryPageApi(
+    pagination.value.currentPage,
+    pagination.value.pageSize
+  );
 
-  if(result.code) {
-    tableData.value = result.data.rows
-    pagination.value.total = result.data.total
+  if (result.code) {
+    tableData.value = result.data.rows;
+    pagination.value.total = result.data.total;
   }
-}
+};
 </script>
 
 <template>
@@ -70,8 +73,13 @@ const queryPage = async () => {
                 <div>参数: {{ scope.row.methodParams }}</div>
               </template>
               <template #reference>
-                <el-tag v-if="scope.row.methodParams.length <= 30">{{ scope.row.methodParams }}</el-tag>
-                <el-tag v-else>{{ scope.row.methodParams.substring(0, 30) + '...' }}</el-tag>
+                <el-tag v-if="!scope.row.methodParams">-</el-tag>
+                <el-tag v-else-if="scope.row.methodParams.length <= 30">{{
+                  scope.row.methodParams
+                }}</el-tag>
+                <el-tag v-else>{{
+                  scope.row.methodParams.substring(0, 30) + "..."
+                }}</el-tag>
               </template>
             </el-popover>
           </template>

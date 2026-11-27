@@ -16,6 +16,12 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @Component
 public class TokenInterceptor implements HandlerInterceptor {
 
+    private final JwtUtils jwtUtils;
+
+    public TokenInterceptor(JwtUtils jwtUtils) {
+        this.jwtUtils = jwtUtils;
+    }
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         //1. 获取请求路径
@@ -40,7 +46,7 @@ public class TokenInterceptor implements HandlerInterceptor {
 
         //5. token 校验失败 -> 401，不放行
         try {
-            Claims claims = JwtUtils.parseToken(token);
+            Claims claims = jwtUtils.parseToken(token);
             // 校验通过：把当前登录员工 id 存入 ThreadLocal，供 AOP 记录操作日志使用
             Object id = claims.get("id");
             if (id != null) {

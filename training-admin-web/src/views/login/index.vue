@@ -1,32 +1,32 @@
 <script setup>
-import { ref } from 'vue'
-import { loginApi } from '@/api/login'
-import { ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router'
+import { ref } from "vue";
+import { loginApi } from "@/api/login";
+import { ElMessage } from "element-plus";
+import { useRouter } from "vue-router";
 
-let loginForm = ref({username:'', password:''})
-let router = useRouter()
+let loginForm = ref({ username: "", password: "" });
+let router = useRouter();
 
 //登录
 const login = async () => {
-  const result = await loginApi(loginForm.value)
-  if (result.code) {// 登录成功
-    ElMessage.success('登录成功')
-    localStorage.setItem('loginUser', JSON.stringify(result.data))
-    router.push('/')// 跳转
-  }else {
-    ElMessage.error(result.msg)
+  const result = await loginApi(loginForm.value);
+  if (result.code) {
+    // 登录成功
+    ElMessage.success("登录成功");
+    localStorage.setItem("loginUser", JSON.stringify(result.data));
+    router.push("/"); // 跳转
+  } else {
+    ElMessage.error(result.msg);
   }
-}
+};
 
 //取消
 const cancel = () => {
   loginForm.value = {
-    username: '',
-    password: ''
-  }
-}
-
+    username: "",
+    password: "",
+  };
+};
 </script>
 
 <template>
@@ -56,7 +56,9 @@ const cancel = () => {
         </el-form-item>
 
         <div class="actions">
-          <el-button class="submit" type="primary" size="large" @click="login">登录</el-button>
+          <el-button class="submit" type="primary" size="large" @click="login"
+            >登录</el-button
+          >
           <el-button class="reset" size="large" @click="cancel">重置</el-button>
         </div>
       </el-form>
@@ -73,8 +75,8 @@ const cancel = () => {
   place-items: center;
   background: #f5f5f2;
   color: #1d1d1f;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI',
-    'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 .login-panel {

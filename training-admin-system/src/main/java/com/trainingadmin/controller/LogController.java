@@ -1,5 +1,6 @@
 package com.trainingadmin.controller;
 
+import com.trainingadmin.pojo.OperateLog;
 import com.trainingadmin.pojo.PageResult;
 import com.trainingadmin.pojo.Result;
 import com.trainingadmin.service.LogService;
@@ -7,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -18,9 +20,10 @@ public class LogController {
     private LogService logService;
 
     @GetMapping("/page")
-    public Result page(Integer page, Integer pageSize) {
+    public Result page(@RequestParam(defaultValue = "1") Integer page,
+                       @RequestParam(defaultValue = "10") Integer pageSize) {
         log.info("分页查询日志: page={}, pageSize={}", page, pageSize);
-        PageResult pageResult = logService.page(page, pageSize);
+        PageResult<OperateLog> pageResult = logService.page(page, pageSize);
         return Result.success(pageResult);
     }
 }

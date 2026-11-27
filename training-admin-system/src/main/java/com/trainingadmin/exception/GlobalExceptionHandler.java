@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  */
 @Slf4j
 @RestControllerAdvice
-public class GlobaExceptionHandler {
+public class GlobalExceptionHandler {
 
     /**
      * 处理业务异常
@@ -36,9 +36,9 @@ public class GlobaExceptionHandler {
      * @param e 系统异常
      * @return 统一响应结果，code 为 0
      */
-    @ExceptionHandler(value = Exception.class)
+    @ExceptionHandler(Exception.class)
     public Result handleException(Exception e) {
-        log.error("程序出错啦~",e);
+        log.error("程序出错啦~", e);
         return Result.error("出错啦，请联系管理员");
     }
 
@@ -50,13 +50,23 @@ public class GlobaExceptionHandler {
      * @param e 唯一键冲突异常
      * @return 统一响应结果，code 为 0
      */
-    @ExceptionHandler
+    @ExceptionHandler(DuplicateKeyException.class)
     public Result handleDuplicateKeyException(DuplicateKeyException e) {
-        log.info("程序出错了",e);
+        log.warn("唯一键冲突：{}", e.getMessage());
         String message = e.getMessage();
-        int i=message.indexOf("Duplicate entry");
-        String errMsg=message.substring(i);
-        String[] arr=errMsg.split(" ");
-        return Result.error(arr[2]+"已存在");
+        if (message == null) {
+            return Result.error("数据已存在");
+        }
+        int index = message.indexOf("Duplicate entry");
+        if (index < 0) {
+            return Result.error("数据已存在");
+        }
+        // MySQL 异常格式：Duplicate entry '值' for key '索引名'
+        String[] parts = message.substring(index).split(" ");
+        if (parts.length >= 3) {
+            String value = parts[2].replace("'", "");
+            return Result.error(value + "已存在");
+        }
+        return Result.error("数据已存在");
     }
 }

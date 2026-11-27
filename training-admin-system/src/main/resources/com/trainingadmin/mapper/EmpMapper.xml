@@ -123,9 +123,9 @@
             count(*) value
         from emp group by gender
     </select>
-    <select id="selectByUsernameAndPassword" resultType="com.trainingadmin.pojo.Emp">
-        select id, username, name
+    <select id="selectByUsername" resultType="com.trainingadmin.pojo.Emp">
+        select id, username, password, name
         from emp
-        where username = #{username} and password = #{password}
+        where username = #{username}
     </select>
 </mapper>

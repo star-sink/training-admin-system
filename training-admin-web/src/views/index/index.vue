@@ -1,60 +1,53 @@
 <script setup>
-
+// 首页仅提供各业务模块的快捷入口，数据均来自实际业务页面
 </script>
 
 <template>
   <div class="home">
     <header class="home-header">
-      <h1 class="home-title">教学后台</h1>
-      <p class="home-subtitle">教学业务管理服务平台</p>
+      <h1 class="home-title">教育培训管理系统</h1>
+      <p class="home-subtitle">
+        部门、员工、班级、学员与教学数据的一体化管理平台
+      </p>
     </header>
 
     <section class="card-grid">
-      <article class="info-card">
-        <h2 class="info-card-title">考务管理</h2>
-        <p class="info-card-desc">考试安排与成绩记录</p>
-      </article>
+      <router-link class="info-card" to="/clazz">
+        <h2 class="info-card-title">班级管理</h2>
+        <p class="info-card-desc">班级信息维护、开课结课状态管理</p>
+        <span class="info-card-arrow">进入 →</span>
+      </router-link>
 
-      <article class="info-card">
-        <h2 class="info-card-title">教务管理</h2>
-        <p class="info-card-desc">班级、课程与教师安排</p>
-      </article>
+      <router-link class="info-card" to="/stu">
+        <h2 class="info-card-title">学员管理</h2>
+        <p class="info-card-desc">学员档案、班级分配与违纪处理</p>
+        <span class="info-card-arrow">进入 →</span>
+      </router-link>
 
-      <article class="info-card">
-        <h2 class="info-card-title">教学数据</h2>
-        <p class="info-card-desc">学员与班级数据概览</p>
-      </article>
+      <router-link class="info-card" to="/emp">
+        <h2 class="info-card-title">员工管理</h2>
+        <p class="info-card-desc">员工信息、部门归属与工作经历维护</p>
+        <span class="info-card-arrow">进入 →</span>
+      </router-link>
 
-      <article class="info-card">
-        <h2 class="info-card-title">反馈管理</h2>
-        <p class="info-card-desc">学员反馈与问题跟进</p>
-      </article>
+      <router-link class="info-card" to="/dept">
+        <h2 class="info-card-title">部门管理</h2>
+        <p class="info-card-desc">组织架构与部门信息维护</p>
+        <span class="info-card-arrow">进入 →</span>
+      </router-link>
     </section>
 
-    <section class="activity">
-      <h2 class="activity-title">最近动态</h2>
-      <ul class="activity-list">
-        <li class="activity-item">
-          <time class="activity-time">09-12 14:30</time>
-          <span class="activity-text">新增学员「陈晨」，分配至 Java 就业班</span>
-        </li>
-        <li class="activity-item">
-          <time class="activity-time">09-12 10:15</time>
-          <span class="activity-text">班级「前端就业 03 期」完成结课</span>
-        </li>
-        <li class="activity-item">
-          <time class="activity-time">09-11 17:40</time>
-          <span class="activity-text">更新员工「李明」的部门与职位</span>
-        </li>
-        <li class="activity-item">
-          <time class="activity-time">09-11 09:05</time>
-          <span class="activity-text">处理一条学员违纪记录</span>
-        </li>
-        <li class="activity-item">
-          <time class="activity-time">09-10 16:20</time>
-          <span class="activity-text">新增部门「教学研发部」</span>
-        </li>
-      </ul>
+    <section class="quick-links">
+      <h2 class="section-title">数据统计</h2>
+      <div class="link-row">
+        <router-link class="quick-link" to="/report/emp"
+          >员工信息统计</router-link
+        >
+        <router-link class="quick-link" to="/report/stu"
+          >学员信息统计</router-link
+        >
+        <router-link class="quick-link" to="/log">操作日志</router-link>
+      </div>
     </section>
   </div>
 </template>
@@ -98,10 +91,20 @@
 }
 
 .info-card {
+  display: flex;
+  flex-direction: column;
   padding: 20px;
   background-color: #fff;
   border: 1px solid #e8e8e3;
   border-radius: 14px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.info-card:hover {
+  border-color: #1d1d1f;
+  transform: translateY(-2px);
 }
 
 .info-card-title {
@@ -118,45 +121,42 @@
   line-height: 1.6;
 }
 
-.activity {
+.info-card-arrow {
+  margin-top: 20px;
+  color: #6e6e73;
+  font-size: 13px;
+}
+
+.quick-links {
   margin-top: 40px;
 }
 
-.activity-title {
-  margin: 0 0 4px;
+.section-title {
+  margin: 0 0 12px;
   color: #86868b;
   font-size: 13px;
   font-weight: 500;
 }
 
-.activity-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.activity-item {
+.link-row {
   display: flex;
-  align-items: baseline;
-  gap: 24px;
-  padding: 14px 0;
-  border-bottom: 1px solid rgb(29 29 31 / 8%);
-  font-size: 14px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.activity-item:last-child {
-  border-bottom: 0;
-}
-
-.activity-time {
-  flex: 0 0 104px;
-  color: #86868b;
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-}
-
-.activity-text {
+.quick-link {
+  padding: 10px 16px;
+  background-color: #fff;
+  border: 1px solid #e8e8e3;
+  border-radius: 10px;
   color: #1d1d1f;
+  font-size: 14px;
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+
+.quick-link:hover {
+  border-color: #1d1d1f;
 }
 
 @media (max-width: 1080px) {
@@ -172,11 +172,6 @@
 
   .card-grid {
     grid-template-columns: 1fr;
-  }
-
-  .activity-item {
-    flex-direction: column;
-    gap: 4px;
   }
 }
 </style>

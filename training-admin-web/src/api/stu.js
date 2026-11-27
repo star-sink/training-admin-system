@@ -1,20 +1,23 @@
-import request from '@/utils/request'
+import request from "@/utils/request";
 
-//分页条件查询
-export const queryPageApi = (clazzId, degree, name, page, pageSize) => 
-  request.get(`/students?clazzId=${clazzId}&degree=${degree}&name=${name}&page=${page}&pageSize=${pageSize}`)
+// 分页条件查询学员
+export const queryPageApi = (clazzId, degree, name, page, pageSize) =>
+  request.get("/students", {
+    params: { clazzId, degree, name, page, pageSize },
+  });
 
-//新增学生
-export const addApi = (stu) => request.post('/students', stu)
+// 新增学员
+export const addApi = (stu) => request.post("/students", stu);
 
-//根据ID查询学生
-export const queryInfoApi = (id) => request.get(`/students/${id}`)
+// 根据 ID 查询学员
+export const queryInfoApi = (id) => request.get(`/students/${id}`);
 
-//修改学生
-export const updateApi = (stu) => request.put(`/students`, stu)
+// 修改学员
+export const updateApi = (stu) => request.put("/students", stu);
 
-//删除学生
-export const deleteApi = (ids) => request.delete(`/students/${ids}`)
+// 删除学员
+export const deleteApi = (id) => request.delete(`/students/${id}`);
 
-//违纪处理
-export const handleViolationApi = (id, score) => request.put(`/students/violation/${id}/${score}`) 
+// 违纪处理
+export const handleViolationApi = (id, score) =>
+  request.put(`/students/violation/${id}/${score}`);

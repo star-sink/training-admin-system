@@ -1,7 +1,7 @@
 package com.trainingadmin.service;
 
 import com.trainingadmin.pojo.Clazz;
-import com.trainingadmin.pojo.EmpQueryParam;
+import com.trainingadmin.pojo.ClazzQueryParam;
 import com.trainingadmin.pojo.PageResult;
 
 import java.util.List;
@@ -22,7 +22,7 @@ public interface ClassService {
      *
      * @return 分页结果，包含总记录数 total 与当前页数据 rows
      */
-    PageResult page(EmpQueryParam empQueryParam);
+    PageResult<Clazz> page(ClazzQueryParam clazzQueryParam);
 
     /**
      * 根据 ID 删除班级

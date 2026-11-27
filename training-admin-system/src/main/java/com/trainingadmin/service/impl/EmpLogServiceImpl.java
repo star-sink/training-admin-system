@@ -14,7 +14,10 @@ public class EmpLogServiceImpl implements EmpLogService {
     @Autowired
     private EmpLogMapper empLogMapper;
 
-    @Transactional(propagation = Propagation.REQUIRED)//需要在一个新的事务中运行
+    /**
+     * 使用独立事务写入日志：主业务回滚时日志仍然保留
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
     public void insertLog(EmpLog empLog) {
         empLogMapper.insert(empLog);

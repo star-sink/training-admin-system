@@ -1,8 +1,7 @@
 package com.trainingadmin.mapper;
 
 import com.trainingadmin.pojo.Clazz;
-import com.trainingadmin.pojo.Emp;
-import com.trainingadmin.pojo.EmpQueryParam;
+import com.trainingadmin.pojo.ClazzQueryParam;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -28,7 +27,7 @@ public interface ClassMapper {
      * @return 班级列表（含 masterName）
      */
     // 3.1 分页查询
-    List<Clazz> list(EmpQueryParam empQueryParam);
+    List<Clazz> list(ClazzQueryParam clazzQueryParam);
 
     /**
      * 查询所有班级（不分页），按修改时间倒序

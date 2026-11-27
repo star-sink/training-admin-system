@@ -18,7 +18,7 @@ public interface StudentService {
      * @param studentQueryParam 分页及筛选条件（姓名、学历、班级、页码、每页条数）
      * @return 分页结果，包含总记录数 total 与当前页数据 rows
      */
-    PageResult page(StudentQueryParam studentQueryParam);
+    PageResult<Student> page(StudentQueryParam studentQueryParam);
 
     /**
      * 根据 ID 删除学员

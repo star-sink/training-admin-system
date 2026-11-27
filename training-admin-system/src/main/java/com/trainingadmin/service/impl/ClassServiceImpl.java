@@ -5,7 +5,7 @@ import com.github.pagehelper.PageHelper;
 import com.trainingadmin.exception.BusinessException;
 import com.trainingadmin.mapper.ClassMapper;
 import com.trainingadmin.pojo.Clazz;
-import com.trainingadmin.pojo.EmpQueryParam;
+import com.trainingadmin.pojo.ClazzQueryParam;
 import com.trainingadmin.pojo.PageResult;
 import com.trainingadmin.service.ClassService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,12 +46,12 @@ public class ClassServiceImpl implements ClassService {
      * @return 分页结果（total + rows）
      */
     @Override
-    public PageResult page(EmpQueryParam empQueryParam) {
+    public PageResult<Clazz> page(ClazzQueryParam clazzQueryParam) {
         // 1. 设置分页参数（页码、每页条数）
-        PageHelper.startPage(empQueryParam.getPage(), empQueryParam.getPageSize());
+        PageHelper.startPage(clazzQueryParam.getPage(), clazzQueryParam.getPageSize());
 
         // 2. 调用 Mapper 查询数据
-        List<Clazz> clazzList = classMapper.list(empQueryParam);
+        List<Clazz> clazzList = classMapper.list(clazzQueryParam);
 
         // 3. 遍历计算状态
         LocalDate now = LocalDate.now();
@@ -67,7 +67,7 @@ public class ClassServiceImpl implements ClassService {
 
         // 4. 将 List 强转为 Page，封装为统一的分页结果
         Page<Clazz> p = (Page<Clazz>) clazzList;
-        return new PageResult(p.getTotal(), p.getResult());
+        return new PageResult<>(p.getTotal(), p.getResult());
     }
     /**
      * 查询所有班级（不分页）

@@ -1,36 +1,49 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import Index from '@/views/index/index.vue';
-import Clazz from '@/views/clazz/index.vue';
-import Stu from '@/views/stu/index.vue';
-import Dept from '@/views/dept/index.vue';
-import Emp from '@/views/emp/index.vue';
-import EmpReport from '@/views/report/emp/index.vue';
-import StuReport from '@/views/report/stu/index.vue';
-import Log from '@/views/log/index.vue';
-import Login from '@/views/login/index.vue';
-import Layout from '@/views/layout/index.vue';
+import { createRouter, createWebHistory } from "vue-router";
+import Index from "@/views/index/index.vue";
+import Clazz from "@/views/clazz/index.vue";
+import Stu from "@/views/stu/index.vue";
+import Dept from "@/views/dept/index.vue";
+import Emp from "@/views/emp/index.vue";
+import EmpReport from "@/views/report/emp/index.vue";
+import StuReport from "@/views/report/stu/index.vue";
+import Log from "@/views/log/index.vue";
+import Login from "@/views/login/index.vue";
+import Layout from "@/views/layout/index.vue";
 
 const routes = [
-  { path: '/', 
+  {
+    path: "/",
     component: Layout,
-    redirect: '/index',
+    redirect: "/index",
     children: [
-      { path: '/index', component: Index },
-      { path: '/clazz', component: Clazz },
-      { path: '/stu', component: Stu },
-      { path: '/dept', component: Dept },
-      { path: '/emp', component: Emp },
-      { path: '/report/emp', component: EmpReport },
-      { path: '/report/stu', component: StuReport },
-      { path: '/log', component: Log }
-    ]
+      { path: "/index", component: Index },
+      { path: "/clazz", component: Clazz },
+      { path: "/stu", component: Stu },
+      { path: "/dept", component: Dept },
+      { path: "/emp", component: Emp },
+      { path: "/report/emp", component: EmpReport },
+      { path: "/report/stu", component: StuReport },
+      { path: "/log", component: Log },
+    ],
   },
-  { path: '/login', component: Login }
+  { path: "/login", component: Login },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+// 路由守卫：未登录只能访问登录页，已登录不再重复进入登录页
+router.beforeEach((to) => {
+  const loginUser = localStorage.getItem("loginUser");
+  if (to.path !== "/login" && !loginUser) {
+    return "/login";
+  }
+  if (to.path === "/login" && loginUser) {
+    return "/index";
+  }
+  return true;
 });
 
 export default router;

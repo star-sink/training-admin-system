@@ -1,32 +1,33 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from "vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { useRouter } from "vue-router";
 
-let router = useRouter()
+let router = useRouter();
 
-const loginName = ref('')
+const loginName = ref("");
 //定义钩子函数, 获取登录用户名
 onMounted(() => {
   //获取登录用户名
-  let loginUser = JSON.parse(localStorage.getItem('loginUser'))
+  let loginUser = JSON.parse(localStorage.getItem("loginUser"));
   if (loginUser) {
-    loginName.value = loginUser.name
+    loginName.value = loginUser.name;
   }
-})
+});
 
 const logout = () => {
   //弹出确认框, 如果确认, 则退出登录, 跳转到登录页面
-  ElMessageBox.confirm('确认退出登录吗?', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {//确认, 则清空登录信息
-    ElMessage.success('退出登录成功')
-    localStorage.removeItem('loginUser')
-    router.push('/login')//跳转到登录页面
-  })
-}
+  ElMessageBox.confirm("确认退出登录吗?", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(() => {
+    //确认, 则清空登录信息
+    ElMessage.success("退出登录成功");
+    localStorage.removeItem("loginUser");
+    router.push("/login"); //跳转到登录页面
+  });
+};
 </script>
 
 <template>
@@ -120,8 +121,8 @@ const logout = () => {
   height: 100%;
   background: #f5f5f2;
   color: #1d1d1f;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI',
-    'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 .header {
