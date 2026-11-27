@@ -207,6 +207,8 @@ curl -s "http://localhost:8081/depts" -H "token: $TOKEN"
 
 ## 5. 接口文档
 
+完整的请求参数、请求示例与响应示例见 [API.md](API.md)。
+
 除 `POST /login` 外，所有接口均需在请求头中携带 `token`。统一响应结构为 `Result { code, msg, data }`，`code = 1` 表示成功；分页数据位于 `data` 中的 `PageResult { total, rows }`。
 
 | 方法 | 路径 | 说明 |
