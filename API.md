@@ -191,7 +191,7 @@ HTTP/1.1 401 Unauthorized
 
 **接口说明**
 
-使用用户名和密码登录，校验成功后签发 JWT。密码在数据库中以 BCrypt 哈希存储。
+使用用户名和密码登录，校验成功后签发 JWT。密码在数据库中以明文存储（Tlias 原版演示写法）。
 
 | 项目 | 内容 |
 | --- | --- |
@@ -205,7 +205,7 @@ HTTP/1.1 401 Unauthorized
 | 参数名 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `username` | String | 是 | 用户名 |
-| `password` | String | 是 | 登录密码（明文传输，服务端与 BCrypt 哈希比对） |
+| `password` | String | 是 | 登录密码（服务端直接按用户名和密码查询比对） |
 
 **请求示例**
 
@@ -517,6 +517,7 @@ token: <JWT>
       {
         "id": 1,
         "username": "zhangsan",
+        "password": "123456",
         "name": "张三",
         "gender": 1,
         "phone": "13309090001",
@@ -533,6 +534,7 @@ token: <JWT>
       {
         "id": 2,
         "username": "lisi",
+        "password": "123456",
         "name": "李四",
         "gender": 1,
         "phone": "13309090002",
@@ -551,7 +553,7 @@ token: <JWT>
 }
 ```
 
-> 出于安全考虑，`password` 字段不会出现在任何响应中。
+> Tlias 原版未对密码字段做只写控制，员工列表/详情响应中会包含 `password` 字段；演示环境请勿用于生产。
 
 **员工对象字段说明**
 
@@ -559,6 +561,7 @@ token: <JWT>
 | --- | --- | --- |
 | `id` | Integer | 员工 ID |
 | `username` | String | 用户名，唯一 |
+| `password` | String | 密码（Tlias 原版会在响应中返回） |
 | `name` | String | 姓名 |
 | `gender` | Integer | 性别 |
 | `phone` | String | 手机号，唯一 |
@@ -606,6 +609,7 @@ token: <JWT>
     {
       "id": 1,
       "username": "zhangsan",
+      "password": "123456",
       "name": "张三",
       "gender": 1,
       "phone": "13309090001",
@@ -658,6 +662,7 @@ token: <JWT>
   "data": {
     "id": 1,
     "username": "zhangsan",
+    "password": "123456",
     "name": "张三",
     "gender": 1,
     "phone": "13309090001",
@@ -712,7 +717,7 @@ token: <JWT>
 | 参数名 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `username` | String | 是 | 用户名，唯一 |
-| `password` | String | 否 | 登录密码；不传或为空时使用默认密码 `123456`，服务端使用 BCrypt 加密 |
+| `password` | String | 否 | 登录密码；Tlias 原版新增员工时不写入该字段，使用数据库默认密码 `123456` |
 | `name` | String | 是 | 姓名 |
 | `gender` | Integer | 是 | 性别：`1` 男，`2` 女 |
 | `phone` | String | 是 | 手机号，唯一 |
@@ -802,7 +807,7 @@ token: <JWT>
 | --- | --- | --- | --- |
 | `id` | Integer | 是 | 员工 ID |
 | `username` | String | 否 | 用户名 |
-| `password` | String | 否 | 新密码；不传则保持原密码，传入后由服务端 BCrypt 加密 |
+| `password` | String | 否 | 新密码；传入后按明文更新（Tlias 原版演示写法），不传则保持原密码 |
 | `name` | String | 否 | 姓名 |
 | `gender` | Integer | 否 | 性别 |
 | `phone` | String | 否 | 手机号 |
@@ -1825,7 +1830,7 @@ token: <JWT>
 | `returnValue` | String | 方法返回值 JSON 字符串，超长自动截断 |
 | `costTime` | Long | 方法执行耗时，单位毫秒 |
 
-> 员工密码字段为只写属性，不会出现在 `methodParams` 中。
+> Tlias 原版未对密码字段做序列化控制；如果方法参数中包含 `Emp`，密码可能出现在 `methodParams` 中，演示环境请注意。
 
 ### 9.2 上传文件
 
@@ -1850,7 +1855,7 @@ token: <JWT>
 
 - 单个文件最大 `10MB`。
 - 单次请求最大 `100MB`。
-- 需要服务端已配置 OSS 的 `endpoint`、`bucketName`、`region` 及 AccessKey 环境变量，否则返回业务错误。
+- 需要服务端在 `application.yml` 中配置 OSS 的 `endpoint`、`bucketName`、`region`，并通过环境变量提供 AccessKey，否则返回业务错误。
 
 **请求示例**
 
@@ -1960,7 +1965,7 @@ curl -s -X POST "http://localhost:8081/emps" \
 | `lisi` | `123456` | 李四 |
 | `wangwu` | `123456` | 王五 |
 
-> 数据库中的密码为 BCrypt 哈希，上表为明文登录密码。
+> 数据库中的密码为明文 `123456`（Tlias 原版演示写法，仅用于本地学习）。
 
 ### 10.3 接口调用注意事项
 
@@ -1968,6 +1973,6 @@ curl -s -X POST "http://localhost:8081/emps" \
 2. 业务失败通常返回 HTTP `200` + `code = 0`，请以 `code` 判断业务是否成功。
 3. `page`、`pageSize` 建议由前端显式传递，不要依赖服务端默认值。
 4. 日期查询参数统一使用 `yyyy-MM-dd` 格式。
-5. 员工密码为只写字段，任何接口响应及审计日志都不会返回密码。
+5. Tlias 原版未对密码字段做只写控制，查询员工等接口可能返回密码字段；演示环境请勿用于生产。
 6. `PUT /emps` 会整体替换工作经历：传空数组或不传 `exprList` 会清空原有工作经历。
 7. 文件上传依赖阿里云 OSS 配置，未配置时仅上传接口不可用，不影响其他接口。

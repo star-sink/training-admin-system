@@ -43,7 +43,7 @@ DROP TABLE IF EXISTS `emp`;
 CREATE TABLE `emp` (
   `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'ID, 主键',
   `username` varchar(20) NOT NULL COMMENT '用户名',
-  `password` varchar(60) DEFAULT '$2a$10$VANKPqW/j.tshIwQHomOwOlSG2o812gbG44IewyKNSF0bObI3bzZW' COMMENT '密码（BCrypt 哈希，初始密码 123456）',
+  `password` varchar(32) DEFAULT '123456' COMMENT '密码',
   `name` varchar(10) NOT NULL COMMENT '姓名',
   `gender` tinyint unsigned NOT NULL COMMENT '性别, 1:男, 2:女',
   `phone` char(11) NOT NULL COMMENT '手机号',
@@ -60,9 +60,9 @@ CREATE TABLE `emp` (
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='员工表';
 
 INSERT INTO `emp` (`id`, `username`, `password`, `name`, `gender`, `phone`, `job`, `salary`, `image`, `entry_date`, `dept_id`, `create_time`, `update_time`) VALUES
-(1,'zhangsan','$2a$10$VANKPqW/j.tshIwQHomOwOlSG2o812gbG44IewyKNSF0bObI3bzZW','张三',1,'13309090001',1,8000,'https://example.com/avatar/1.jpg','2020-01-01',1,'2023-10-20 16:35:33','2023-11-16 16:11:26'),
-(2,'lisi','$2a$10$Twa5PP2421oCOOkFqI7a2OX/ZUPK5JoU.4z7DS0FsDemDYvavI1ei','李四',1,'13309090002',2,9000,'https://example.com/avatar/2.jpg','2019-03-15',2,'2023-10-20 16:35:33','2023-10-20 16:35:37'),
-(3,'wangwu','$2a$10$jT75/lE7oPQ6JHjCvz9c0OhQmdljrDvKKEHUcJhMLq9iaiAxTlr4e','王五',2,'13309090003',3,10000,'https://example.com/avatar/3.jpg','2021-07-01',3,'2023-10-20 16:35:33','2023-10-20 16:35:39');
+(1,'zhangsan','123456','张三',1,'13309090001',1,8000,'https://example.com/avatar/1.jpg','2020-01-01',1,'2023-10-20 16:35:33','2023-11-16 16:11:26'),
+(2,'lisi','123456','李四',1,'13309090002',2,9000,'https://example.com/avatar/2.jpg','2019-03-15',2,'2023-10-20 16:35:33','2023-10-20 16:35:37'),
+(3,'wangwu','123456','王五',2,'13309090003',3,10000,'https://example.com/avatar/3.jpg','2021-07-01',3,'2023-10-20 16:35:33','2023-10-20 16:35:39');
 
 DROP TABLE IF EXISTS `emp_expr`;
 CREATE TABLE `emp_expr` (

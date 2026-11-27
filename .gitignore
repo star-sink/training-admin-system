@@ -10,6 +10,7 @@ node_modules/
 .idea/
 *.iml
 .vscode/
+.run/
 
 # 日志
 logs/
@@ -19,6 +20,10 @@ logs/
 .env
 .env.*
 !.env.example
+
+# 本地配置（不要提交真实数据库密码/OSS 凭证）
+application-local.yml
+application-local.yaml
 
 # 系统文件
 .DS_Store

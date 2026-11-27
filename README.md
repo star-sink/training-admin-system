@@ -1,6 +1,6 @@
 # 教育培训管理系统
 
-一套面向培训机构教务场景的前后端分离管理系统，围绕 **部门 — 员工 — 班级 — 学员** 主线提供人员与教学组织管理能力，并结合 JWT 认证、BCrypt 密码加密与 AOP 操作审计实现安全访问和操作留痕。
+一套面向培训机构教务场景的前后端分离管理系统，围绕 **部门 — 员工 — 班级 — 学员** 主线提供人员与教学组织管理能力，并结合 JWT 认证、拦截器鉴权与 AOP 操作审计实现登录校验和操作留痕。
 
 - **后端**：`training-admin-system`（Spring Boot 4 + MyBatis + MySQL）
 - **前端**：`training-admin-web`（Vue 3 + Vite + Element Plus）
@@ -10,9 +10,9 @@
 
 ### 认证与鉴权
 
-- 用户名 / 密码登录，密码使用 **BCrypt** 加盐哈希存储，数据库中不保存明文。
+- 用户名 / 密码登录，按用户名和密码直接查询员工（Tlias 原版演示写法）。
 - 登录成功后签发 JWT，除 `/login` 外的接口统一通过拦截器校验请求头 `token`，非法或过期返回 HTTP 401。
-- 校验通过后将当前员工 ID 写入 `ThreadLocal`，请求结束后自动清理，避免线程复用导致操作人串号。
+- 操作日志切面在记录日志时从请求头 `token` 解析当前员工 ID，不使用 `ThreadLocal` 传递上下文。
 
 ### 基础数据管理
 
@@ -32,12 +32,12 @@
 - 自定义 `@Log` 注解标记增删改接口，`OperateLogAspect` 通过环绕通知记录操作人、时间、类名、方法名、参数、返回值与耗时。
 - 审计日志写入 `operate_log` 表，参数与返回值超长时自动截断；日志写入失败不影响主业务。
 - `/log/page` 分页查看操作日志，并关联员工表展示操作人姓名。
-- 员工密码字段标记为只写，接口响应和操作日志中均不会输出。
+- 操作人从请求头 `token` 解析得到，无需 ThreadLocal 上下文。
 
 ### 文件上传
 
 - 支持头像等图片上传至阿里云 OSS，按 `yyyy/MM/UUID.扩展名` 生成对象路径并返回访问 URL。
-- AccessKey 通过环境变量注入；未配置 OSS 时应用仍可正常启动，仅上传接口不可用。
+- OSS 的 endpoint/bucketName/region 在 application.yml 配置，AccessKey 通过环境变量注入；未配置完整时应用仍可正常启动，仅上传接口不可用。
 
 ## 2. 技术栈
 
@@ -50,7 +50,6 @@
 | 持久层 | MyBatis、PageHelper 1.4.7 |
 | 数据库 | MySQL 8、HikariCP |
 | 认证 | JJWT 0.12.6 |
-| 密码加密 | Spring Security Crypto（BCrypt） |
 | 文件存储 | 阿里云 OSS SDK V2 |
 | 构建工具 | Maven、Lombok |
 
@@ -78,14 +77,14 @@ web-ai-project02/
 │       │   ├── TrainingAdminApplication.java
 │       │   ├── anno/                # 自定义 @Log 注解
 │       │   ├── aop/                 # 操作日志切面
-│       │   ├── config/              # Web 配置、拦截器、密码加密器
+│       │   ├── config/              # Web 配置、拦截器注册
 │       │   ├── controller/          # REST 接口
 │       │   ├── exception/           # 业务异常与全局异常处理
 │       │   ├── interceptor/         # JWT 登录拦截器
 │       │   ├── mapper/              # MyBatis Mapper 接口
 │       │   ├── pojo/                # 实体与查询参数
 │       │   ├── service/             # 业务接口与实现
-│       │   └── utils/               # JWT、ThreadLocal、OSS 工具
+│       │   └── utils/               # JWT、OSS 工具
 │       └── resources/
 │           ├── application.yml
 │           ├── logback.xml
@@ -119,7 +118,7 @@ mysql --default-character-set=utf8mb4 -uroot -p < training.sql
 
 脚本会创建 `training` 数据库、7 张业务表并写入测试数据。注意：脚本包含 `DROP TABLE IF EXISTS`，已有数据的环境请先备份。
 
-内置测试账号（密码均为 `123456`，数据库中保存的是 BCrypt 哈希）：
+内置测试账号（密码均为 `123456`，数据库中保存的是明文密码，仅用于本地演示）：
 
 | 用户名 | 姓名 |
 | --- | --- |
@@ -129,34 +128,26 @@ mysql --default-character-set=utf8mb4 -uroot -p < training.sql
 
 ### 4.3 配置后端
 
-`training-admin-system/src/main/resources/application.yml` 支持环境变量覆盖，本地开发可直接使用默认值：
+`training-admin-system/src/main/resources/application.yml` 中已经填写数据库与 OSS 的基础配置，启动前请确认：
 
-| 环境变量 | 默认值 | 说明 |
+| 配置项 | 位置 | 说明 |
 | --- | --- | --- |
-| `DB_URL` | `jdbc:mysql://localhost:3306/training...` | 数据库连接地址 |
-| `DB_USERNAME` | `root` | 数据库用户名 |
-| `DB_PASSWORD` | `123456` | 数据库密码 |
-| `JWT_SECRET` | 内置演示密钥 | JWT 签名密钥，生产环境必须覆盖（≥32 字节） |
-| `JWT_EXPIRATION` | `43200000` | 令牌有效期（毫秒），默认 12 小时 |
-| `OSS_ENDPOINT` | 空 | 阿里云 OSS Endpoint |
-| `OSS_BUCKET_NAME` | 空 | Bucket 名称 |
-| `OSS_REGION` | 空 | Bucket 所在地域 |
-| `OSS_ACCESS_KEY_ID` | 空 | OSS AccessKey ID（SDK 从环境变量读取） |
-| `OSS_ACCESS_KEY_SECRET` | 空 | OSS AccessKey Secret |
+| 数据库地址 | `DB_URL` 环境变量或 `application.yml` | 默认 `jdbc:mysql://localhost:3306/training...` |
+| 数据库用户名 / 密码 | `application.yml` 的 `spring.datasource` | 按本地 MySQL 填写 |
+| OSS `endpoint` / `bucketName` / `region` | `application.yml` 的 `aliyun.oss` | 仅文件上传功能需要 |
+| OSS AccessKey ID / Secret | 环境变量 `OSS_ACCESS_KEY_ID`、`OSS_ACCESS_KEY_SECRET` | 由 OSS SDK 读取 |
 
-示例（PowerShell）：
+示例（PowerShell，仅覆盖仍支持环境变量的部分）：
 
 ```powershell
-$env:DB_PASSWORD = "你的数据库密码"
-$env:JWT_SECRET = "至少32字节的随机字符串"
-$env:OSS_ENDPOINT = "https://oss-cn-beijing.aliyuncs.com"
-$env:OSS_BUCKET_NAME = "你的Bucket"
-$env:OSS_REGION = "cn-beijing"
+$env:DB_URL = "jdbc:mysql://localhost:3306/training?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
 $env:OSS_ACCESS_KEY_ID = "你的AccessKeyId"
 $env:OSS_ACCESS_KEY_SECRET = "你的AccessKeySecret"
 ```
 
-仅在使用 `/upload` 时需要有效的 OSS 配置。
+> `application.yml` 是被 Git 跟踪的文件，不要把真实的数据库密码、AccessKey 提交到仓库。团队协作或生产环境建议改用环境变量，或新建 `application-local.yml`（已在 `.gitignore` 中忽略）并通过 `--spring.profiles.active=local` 启用。
+
+仅在使用 `/upload` 时需要完整的 OSS 配置；未配置 OSS 时应用仍可正常启动，只是上传接口不可用。
 
 ### 4.4 启动后端
 
@@ -266,7 +257,7 @@ curl -s "http://localhost:8081/depts" -H "token: $TOKEN"
 浏览器（Vue 3 + Element Plus）
   │  HTTP/JSON，请求头携带 token
   ▼
-TokenInterceptor（JWT 校验 / 401 / 写入 ThreadLocal）
+TokenInterceptor（JWT 校验 / 401）
   ▼
 Controller（参数绑定、统一返回 Result）
   ▼
@@ -277,17 +268,16 @@ Mapper（MyBatis XML / 注解 SQL）
 MySQL（training）
 ```
 
-### 认证与上下文传递
+### 认证与操作人获取
 
-- 登录成功后由 `JwtUtils` 签发 JWT，载荷包含员工 `id` 与 `username`；密钥和有效期来自配置项。
+- 登录成功后由 `JwtUtils` 签发 JWT，载荷包含员工 `id` 与 `username`；密钥和有效期使用 `JwtUtils` 中的静态常量（Tlias 原版写法）。
 - `TokenInterceptor` 拦截除 `/login` 外的全部请求，校验失败返回 HTTP 401。
-- 校验通过后将员工 ID 写入 `CurrentHolder` 的 `ThreadLocal`，供 AOP 获取当前操作人；请求结束后在 `afterCompletion` 中清理。
+- `OperateLogAspect` 通过 `RequestContextHolder` 获取当前请求，读取请求头 `token` 并用 `JwtUtils.parseJWT` 解析员工 ID，作为操作人写入审计日志。
 
-### 密码安全
+### 密码说明
 
-- 使用 `BCryptPasswordEncoder` 对密码加盐哈希，登录时使用 `matches` 校验。
-- 兼容历史明文数据：首次登录校验通过后自动升级为 BCrypt 哈希。
-- `Emp.password` 使用 `@JsonProperty(access = WRITE_ONLY)`，避免接口响应和审计日志泄露密码。
+- 本项目按 Tlias 原版演示实现，员工密码以明文形式存储和比对，仅用于本地学习。
+- 生产环境不应使用明文密码，建议后续引入 BCrypt 或 Spring Security。
 
 ### 全局异常处理
 
@@ -319,16 +309,16 @@ MySQL（training）
 ## 7. 项目亮点（可用于简历）
 
 - 基于 Spring Boot 4 + MyBatis 实现分层 REST 服务，使用 PageHelper 完成物理分页与动态条件查询。
-- 基于 JWT + 拦截器 + ThreadLocal 实现无状态登录鉴权与操作人上下文传递，请求结束自动清理。
-- 基于自定义注解 + Spring AOP 实现操作审计，异步关注点与业务代码解耦，日志入库失败不影响主流程。
-- 使用 BCrypt 加盐哈希存储密码，并通过 `WRITE_ONLY` 序列化策略避免密码泄露到接口响应与审计日志。
+- 基于 JWT + 拦截器实现无状态登录鉴权，操作日志切面从请求头解析当前操作人。
+- 基于自定义注解 + Spring AOP 实现操作审计，横切关注点与业务代码解耦，日志入库失败不影响主流程。
+- 登录按 Tlias 原版直接查询用户名和密码，结构简单，便于教学演示。
 - 使用 `@Transactional` 保证员工与工作经历的多表一致性，通过 `REQUIRES_NEW` 实现独立日志事务。
 - 前端基于 Vue 3 + Element Plus + Axios 拦截器 + 路由守卫实现前后端分离与登录态管理。
-- 敏感配置（数据库密码、JWT 密钥、OSS 凭证）统一支持环境变量覆盖。
+- OSS AccessKey 通过环境变量读取；数据库与 OSS 基础配置集中在 application.yml，请勿提交真实凭证。
 
 ## 8. 后续可优化方向
 
-- 引入 Spring Security 与 RBAC，实现菜单/按钮级权限控制。
+- 引入 Spring Security 与 RBAC，实现菜单/按钮级权限控制，并使用 BCrypt 存储密码。
 - 补充 Service 层单元测试与接口集成测试。
 - 增加参数校验（Bean Validation）与统一错误码。
 - 使用 Docker Compose 一键启动 MySQL、后端与前端。

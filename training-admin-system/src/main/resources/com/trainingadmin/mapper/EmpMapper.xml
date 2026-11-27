@@ -123,9 +123,10 @@
             count(*) value
         from emp group by gender
     </select>
-    <select id="selectByUsername" resultType="com.trainingadmin.pojo.Emp">
-        select id, username, password, name
+    <!-- 此文件已回滚至 Tlias 原版：按用户名和密码直接查询 -->
+    <select id="selectByUsernameAndPassword" resultType="com.trainingadmin.pojo.Emp">
+        select id, username, name
         from emp
-        where username = #{username}
+        where username = #{username} and password = #{password}
     </select>
 </mapper>
