@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.trainingadmin.mapper.LogMapper">
+
+    <!-- 查询 AOP 写入的操作审计日志，并关联员工表取出操作人姓名 -->
+    <select id="list" resultType="com.trainingadmin.pojo.OperateLog">
+        select
+            ol.id,
+            ol.operate_emp_id as operateEmpId,
+            ol.operate_time as operateTime,
+            ol.class_name as className,
+            ol.method_name as methodName,
+            ol.method_params as methodParams,
+            ol.return_value as returnValue,
+            ol.cost_time as costTime,
+            e.name as operateEmpName
+        from operate_log ol
+        left join emp e on e.id = ol.operate_emp_id
+        order by ol.operate_time desc
+    </select>
+
+</mapper>

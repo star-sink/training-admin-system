@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace 必须写你对应的 Mapper 接口的全限定名 -->
+<mapper namespace="com.trainingadmin.mapper.ClassMapper">
+
+    <!--
+        新增班级
+        对应接口：void insert(Clazz clazz)
+        说明：
+          1. useGeneratedKeys="true" keyProperty="id" 表示使用数据库自增主键，
+             插入成功后会把生成的主键值回填到入参对象的 id 属性；
+          2. create_time / update_time 由 Service 层统一设置为服务端当前时间，
+             保证审计字段完整，同时使新班级能按 update_time 倒序正常展示。
+    -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO clazz
+            (name,room,begin_date,end_date,master_id,subject,create_time,update_time)
+            VALUES
+            (#{name},#{room},#{beginDate},#{endDate},#{masterId},#{subject},#{createTime},#{updateTime})
+    </insert>
+    <!--
+        修改班级信息（动态 SQL）
+        对应接口：void update(Clazz clazz)
+        说明：
+          1. set 标签会自动生成 SET 关键字，并删除最后一个字段后多余的逗号；
+          2. if 标签实现“传了哪个字段才更新哪个字段”，避免把前端未传的字段覆盖为 NULL；
+          3. update_time 不参与判断，每次修改都强制刷新为 Service 层设置的当前时间。
+    -->
+    <!-- 3.5 修改班级 -->
+    <update id="update">
+        UPDATE clazz
+        <set>
+            <!-- 班级名称：非 null 且非空字符串时才更新 -->
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <!-- 班级教室：非 null 且非空字符串时才更新 -->
+            <if test="room != null and room != ''">
+                room = #{room},
+            </if>
+            <!-- 开课日期：非 null 时才更新（LocalDate 类型无需判断空串） -->
+            <if test="beginDate != null">
+                begin_date = #{beginDate},
+            </if>
+            <!-- 结课日期：非 null 时才更新 -->
+            <if test="endDate != null">
+                end_date = #{endDate},
+            </if>
+            <!-- 班主任 ID：非 null 时才更新 -->
+            <if test="masterId != null">
+                master_id = #{masterId},
+            </if>
+            <!-- 学科：非 null 时才更新 -->
+            <if test="subject != null">
+                subject = #{subject},
+            </if>
+            <!-- 修改时间强制更新，不使用 if 判断，保证每次修改都有审计时间 -->
+            update_time = #{updateTime}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!--
+        根据 ID 删除班级
+        对应接口：void deleteById(Integer id)
+        说明：主键删除，返回受影响行数由 MyBatis 内部处理。
+    -->
+    <delete id="deleteById">
+        delete from clazz where id = #{id}
+    </delete>
+
+    <!--
+        查询所有班级（不分页）
+        对应接口：List<Clazz> findAll()
+        说明：用于前端下拉框等场景，按修改时间倒序展示最近维护的班级。
+    -->
+    <!-- id 必须和接口中的方法名 findAll 保持一致 -->
+    <select id="findAll" resultType="com.trainingadmin.pojo.Clazz">
+        select * from clazz order by update_time desc
+    </select>
+
+    <!--
+        根据 ID 查询班级详情
+        对应接口：Clazz getById(Integer id)
+        说明：主键查询，供修改页面回显表单数据。
+    -->
+    <!-- 3.4 根据ID查询 -->
+    <select id="getById" resultType="com.trainingadmin.pojo.Clazz">
+        SELECT * FROM clazz WHERE id = #{id}
+    </select>
+    <!--
+        分页条件查询班级（联表查询班主任姓名）
+        对应接口：List<Clazz> list(EmpQueryParam empQueryParam)
+        说明：
+          1. SELECT c.* 查询班级全部字段，e.name AS masterName 补充班主任姓名；
+          2. LEFT JOIN 保证没有分配班主任的班级也能查询出来（masterName 为 NULL）；
+          3. 分页由 Service 层的 PageHelper 自动改写 SQL 完成，此处无需写 LIMIT。
+    -->
+    <!-- 3.1 分页条件查询 (联表查班主任) -->
+    <select id="list" resultType="com.trainingadmin.pojo.Clazz">
+        SELECT c.*, e.name AS masterName
+        FROM clazz c
+        LEFT JOIN emp e ON c.master_id = e.id
+        <!-- where 标签会自动生成 WHERE 关键字，并去掉第一个条件前多余的 AND -->
+        <where>
+            <!-- 班级名称：模糊匹配，空字符串视为未传该条件 -->
+            <if test="name != null and name != ''">
+                AND c.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <!-- 结课时间区间：开始、结束时间都传时使用 BETWEEN -->
+            <if test="begin != null and end != null">
+                AND c.end_date BETWEEN #{begin} AND #{end}
+            </if>
+            <!-- 只传开始时间：查询结课日期大于等于该日期的班级 -->
+            <if test="begin != null and end == null">
+                AND c.end_date &gt;= #{begin}
+            </if>
+            <!-- 只传结束时间：查询结课日期小于等于该日期的班级 -->
+            <if test="begin == null and end != null">
+                AND c.end_date &lt;= #{end}
+            </if>
+        </where>
+        <!-- 按修改时间倒序，最近维护的班级排在前面 -->
+        ORDER BY c.update_time DESC
+    </select>
+
+</mapper>

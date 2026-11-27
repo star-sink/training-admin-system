@@ -1,0 +1,36 @@
+package com.trainingadmin;
+
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;          // 1. 导入 SLF4J 的 Logger
+import org.slf4j.LoggerFactory;   // 2. 导入 SLF4J 的 LoggerFactory
+
+import java.time.LocalDateTime;
+
+public class LogTest {
+
+    // 3. 使用标准写法初始化 Logger
+    private static final Logger log = LoggerFactory.getLogger(LogTest.class);
+
+    @Test
+    public void testLog() {
+       // System.out.println(LocalDateTime.now().toString());
+        log.debug("开始计算...");  // 现在可以直接传字符串了
+
+        int sum = 0;
+        int[] nums = {1, 5, 3, 2, 1, 4, 5, 4, 6, 7, 4, 34, 2, 23};
+        for (int num : nums) {
+            sum += num;
+        }
+        log.info("计算结果为："+sum);
+        //System.out.println("计算结果为："+sum);
+        //System.out.println(LocalDateTime.now()+"结束计算。。。");
+        log.debug("结束计算。。。");
+
+
+        log.trace("trace...");
+        log.warn("warn...");
+        log.error("error...");
+    }
+
+
+}

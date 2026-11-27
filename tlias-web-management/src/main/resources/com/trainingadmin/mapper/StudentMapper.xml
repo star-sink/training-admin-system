@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!-- namespace 必须与 Mapper 接口的全限定名一致，MyBatis 通过它把接口方法与下面的 SQL 关联起来 -->
+<mapper namespace="com.trainingadmin.mapper.StudentMapper">
+
+    <!-- 新增学员
+         useGeneratedKeys="true"：使用数据库自增主键
+         keyProperty="id"：把生成的主键回填到 Student 对象的 id 属性
+         创建时间、修改时间由数据库 NOW() 生成，避免依赖前端传参 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO student
+            (name, no, gender, phone, id_card, is_college,address,
+             degree, graduation_date, clazz_id, create_time, update_time)
+        VALUES (#{name}, #{no}, #{gender}, #{phone}, #{idCard}, #{isCollege},#{address},
+                #{degree}, #{graduationDate}, #{clazzId}, NOW(), NOW())
+    </insert>
+
+    <!-- 修改学员信息
+         <set> 会自动去掉最后多余的逗号；<if> 实现动态更新：
+         只更新前端传入的非空字段，未传的字段保持数据库原值 -->
+    <update id="update">
+        UPDATE student
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="no != null">no = #{no},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="degree != null">degree = #{degree},</if>
+            <if test="idCard != null">id_card = #{idCard},</if>
+            <if test="isCollege != null">is_college = #{isCollege},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="graduationDate != null">graduation_date = #{graduationDate},</if>
+            <if test="violationCount != null">violation_count = #{violationCount},</if>
+            <if test="violationScore != null">violation_score = #{violationScore},</if>
+            <if test="clazzId != null">clazz_id = #{clazzId},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 学员违纪处理
+         直接在 SQL 中做自增和累加，保证并发安全；
+         每次违纪次数 +1，扣分累加传入的 score，并刷新修改时间 -->
+    <update id="updateViolation">
+        update student
+        set violation_count = violation_count + 1,
+            violation_score = violation_score + #{score},
+            update_time     = now()
+        where id = #{id}
+    </update>
+
+    <!-- 根据 ID 删除学员 -->
+    <delete id="deleteById">
+        delete from student where id = #{id}
+    </delete>
+
+    <!-- 分页条件查询学员列表
+         resultType 指定结果映射的实体类；
+         左连接班级表，把班级名称映射到 Student.clazzName 供前端展示；
+         <where> 会自动处理第一个条件前的 AND，并只在有条件时才拼接 WHERE -->
+    <select id="list" resultType="com.trainingadmin.pojo.Student">
+        SELECT
+        s.*,
+        c.name AS clazzName
+        FROM student s
+        LEFT JOIN clazz c ON s.clazz_id = c.id
+        <where>
+            <!-- 姓名模糊匹配 -->
+            <if test="name != null and name != ''">
+                AND s.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <!-- 按学历精确筛选 -->
+            <if test="degree != null">
+                AND s.degree = #{degree}
+            </if>
+            <!-- 按班级精确筛选 -->
+            <if test="clazzId != null">
+                AND s.clazz_id = #{clazzId}
+            </if>
+        </where>
+        <!-- 按修改时间倒序，最近修改的学员排在前面 -->
+        ORDER BY s.update_time DESC
+    </select>
+
+    <!-- 根据 ID 查询学员详情，用于修改页面数据回显 -->
+    <select id="getById" resultType="com.trainingadmin.pojo.Student">
+        SELECT * FROM student WHERE id = #{id}
+    </select>
+
+    <!-- 统计学员学历分布（用于报表图表）
+         degree 是数字字典值，这里用 CASE WHEN 转成中文名称；
+         返回 name（学历名称）与 value（人数）两列，对应前端图表的数据结构 -->
+    <select id="getStudentDegreeData" resultType="java.util.Map">
+        select
+            (case
+                 when degree = 1 then '初中'
+                 when degree = 2 then '高中'
+                 when degree = 3 then '大专'
+                 when degree = 4 then '本科'
+                 when degree = 5 then '硕士'
+                 when degree = 6 then '博士'
+                 else '其他'
+                end) as name,
+            count(*) as value
+        from student
+        group by degree
+        order by value desc
+    </select>
+
+    <!-- 统计各班级人数（用于报表图表）
+         以班级表为主表左连接学员表，没有学员的班级人数为 0 也会返回；
+         返回 clazzName（班级名称）与 num（人数）两列 -->
+    <select id="getStudentCountData" resultType="java.util.Map">
+        select
+            c.name as clazzName,
+            count(s.id) as num
+        from clazz c
+                 left join student s on c.id = s.clazz_id
+        group by c.id, c.name
+        order by c.update_time desc
+    </select>
+
+
+</mapper>
